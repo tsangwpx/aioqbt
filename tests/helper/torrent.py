@@ -164,7 +164,7 @@ async def temporary_torrents(client: APIClient, *samples: TorrentData, paused: b
     table: Dict[str, int] = {}
     for i, item in enumerate(samples):
         table[item.hash] = i
-        builder = builder.add_torrent(f"{item.name}.torrent", item.data)
+        builder = builder.include_file(item.data, f"{item.name}.torrent")
 
     hashes = list(table.keys())
     torrents = []

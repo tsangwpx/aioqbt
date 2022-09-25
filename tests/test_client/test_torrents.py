@@ -43,7 +43,7 @@ async def test_add(client: APIClient):
         .sequential_download(True)
         .first_last_piece_prio(True)
         .auto_tmm(False)
-        .add_torrent(f"{sample.name}.torrent", sample.data)
+        .include_file(sample.data, f"{sample.name}.torrent")
         .build()
     )
     await one_moment()
@@ -83,12 +83,12 @@ async def test_add_mixed(client: APIClient):
     await client.torrents.add(
         AddFormBuilder.with_client(client)
         .paused(True)
-        .add_torrent("data1.torrent", sample_data1.data)
-        .add_url(sample_magnet1.magnet)
-        .add_url(sample_hash1.hash)
-        .add_torrent("data2.torrent", sample_data2.data)
-        .add_url(sample_magnet2.magnet)
-        .add_url(sample_hash2.hash)
+        .include_file(sample_data1.data, "data1.torrent")
+        .include_url(sample_magnet1.magnet)
+        .include_url(sample_hash1.hash)
+        .include_file(sample_data2.data, "data2.torrent")
+        .include_url(sample_magnet2.magnet)
+        .include_url(sample_hash2.hash)
         .build()
     )
     await one_moment()
@@ -113,7 +113,7 @@ def test_add_builder():
 
     assert builder == builder_copy
 
-    builder2 = builder.add_url("0" * 40)
+    builder2 = builder.include_url("0" * 40)
 
     assert builder != builder2
 

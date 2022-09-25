@@ -665,7 +665,7 @@ class AddFormBuilder:
     api_version: Optional[APIVersion] = None
 
     _urls: List[str] = field(default_factory=list)
-    _torrents: List[Tuple[str, bytes]] = field(default_factory=list)
+    _files: List[Tuple[bytes, str]] = field(default_factory=list)
 
     _savepath: Optional[str] = None
     _cookie: Optional[str] = None
@@ -687,13 +687,13 @@ class AddFormBuilder:
         return dataclasses.replace(
             self,
             _urls=list(self._urls),
-            _torrents=list(self._torrents),
+            _files=list(self._files),
         )
 
     __copy__ = __deepcopy__
 
     @copy_self
-    def add_url(self, url: str):
+    def include_url(self, url: str):
         """
         Add a URL, magnet link, or SHA1 hash.
         """
@@ -702,13 +702,24 @@ class AddFormBuilder:
         return self
 
     @copy_self
-    def add_torrent(self, filename: str, data: bytes):
+    def include_file(self, data: bytes, filename: Optional[str] = None):
         """
-        Add a torrent and its content.
+        Add a torrent file.
         """
 
-        self._torrents.append((filename, bytes(data)))
+        if filename is None:
+            filename = f"{len(self._files) + 1:d}.torrent"
+
+        self._files.append((bytes(data), filename))
         return self
+
+    def add_url(self, url: str):
+        # deprecated, use include_url() instead
+        return self.include_url(url)  # pragma: no cover
+
+    def add_torrent(self, filename: str, data: bytes):
+        # deprecated, use include_file() instead
+        return self.include_file(data, filename)  # pragma: no cover
 
     @copy_self
     def savepath(self, savepath: _PathLike):
@@ -839,10 +850,10 @@ class AddFormBuilder:
             # Probably 4.1.6???
             form.add_field("urls", "\n".join(self._urls), content_type="text/plain")
 
-        for filename, torrent_data in self._torrents:
+        for filedata, filename in self._files:
             form.add_field(
                 "torrents",
-                torrent_data,
+                filedata,
                 filename=filename,
                 content_type="application/x-bittorrent",
             )
