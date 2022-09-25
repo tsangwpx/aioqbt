@@ -1,3 +1,4 @@
+import dataclasses
 import os
 from dataclasses import dataclass, field
 from datetime import timedelta
@@ -681,6 +682,15 @@ class AddFormBuilder:
     _auto_tmm: Optional[bool] = None
     _sequential_download: Optional[bool] = None
     _first_last_piece_prio: Optional[bool] = None
+
+    def __deepcopy__(self, memodict=None):
+        return dataclasses.replace(
+            self,
+            _urls=list(self._urls),
+            _torrents=list(self._torrents),
+        )
+
+    __copy__ = __deepcopy__
 
     @copy_self
     def add_url(self, url: str):

@@ -1,3 +1,4 @@
+import copy
 import datetime
 
 import pytest
@@ -104,6 +105,17 @@ async def test_add_mixed(client: APIClient):
     assert len(torrents) == len(hashes)
 
     await client.torrents.delete(hashes, True)
+
+
+def test_add_builder():
+    builder = AddFormBuilder()
+    builder_copy = copy.copy(builder)
+
+    assert builder == builder_copy
+
+    builder2 = builder.add_url("0" * 40)
+
+    assert builder != builder2
 
 
 @pytest.mark.asyncio
