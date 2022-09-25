@@ -53,14 +53,14 @@ async def test_closed_errors(mock_login: LoginInfo):
         username=mock_login.username,
         password=mock_login.password,
     )
-    assert not client.closed
+    assert not client.is_closed()
 
     with pytest.raises(ValueError):
         await client.request("GET", "hello", max_attempts=0)
 
     await client.close()
     await client.close()
-    assert client.closed
+    assert client.is_closed()
 
     with pytest.raises(RuntimeError):
         await client.request("GET", "whatever")

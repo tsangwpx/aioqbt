@@ -111,8 +111,13 @@ class APIClient:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.close()
 
+    def is_closed(self) -> bool:
+        """Tell whether client is closed"""
+        return self._http is None
+
     @property
     def closed(self) -> bool:
+        # deprecated, prefer `is_closed()` to `closed` property
         return self._http is None
 
     async def close(self):
@@ -396,7 +401,7 @@ class APIGroup(metaclass=ABCMeta):
 
     def __init__(self, client: "APIClient"):
         # do not keep the reference if closed
-        self._client_ref = client if not client.closed else None
+        self._client_ref = None if client.is_closed() else client
 
     def _client(self) -> "APIClient":
         client = self._client_ref
