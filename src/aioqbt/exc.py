@@ -14,6 +14,12 @@ class AQError(Exception):
     """
 
 
+class MapperError(AQError):
+    """
+    Raised when mapper operations failed.
+    """
+
+
 class VersionError(AQError):
     """
     Version check failed.

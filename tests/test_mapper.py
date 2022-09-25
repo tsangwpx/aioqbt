@@ -3,7 +3,8 @@ from typing import Any
 
 import pytest
 
-from aioqbt.mapper import ATTR_RAW_DATA, MapperError, ObjectMapper, inspect_raw_data
+from aioqbt.exc import MapperError
+from aioqbt.mapper import ATTR_RAW_DATA, ObjectMapper, inspect_raw_data
 
 
 @dataclass

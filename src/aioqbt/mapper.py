@@ -20,14 +20,13 @@ from weakref import WeakKeyDictionary
 
 from typing_extensions import Protocol
 
+from aioqbt.exc import MapperError
+
 __all__ = (
     "ConvertFn",
-    "MapperError",
     "ObjectMapper",
     "inspect_raw_data",
 )
-
-from aioqbt import exc
 
 T = TypeVar("T")
 E = TypeVar("E", bound=Enum)
@@ -47,10 +46,6 @@ class ConvertFn(Protocol):
 
     def __call__(self, value: Any, context: Mapping[Any, Any]) -> Any:
         pass
-
-
-class MapperError(exc.AQError):
-    pass
 
 
 @dataclass
