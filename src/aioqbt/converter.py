@@ -61,19 +61,19 @@ class DateTimeConverter(Converter):
         - :attr:`.TorrentInfo.seen_complete` and :attr:`.TorrentProperties.last_seen`.
             :attr:`.TorrentInfo.completion_on` and :attr:`.TorrentProperties.completion_date`.
             These attributes are directly exposed in :class:`.TorrentInfo`
-            while the counterparts return invalid values as `-1` in
+            while the counterparts return invalid values as ``-1`` in
             :class:`.TorrentProperties`.
 
     .. note::
         Some input values are special or malformed.
-        `-1` usually indicate the absence of value.
-        In some versions, `0xFFFF_FFFF` may be returned because of
-        the 32-bit unsigned value of `-1`.
+        ``-1`` usually indicate the absence of value.
+        In some versions, ``0xFFFF_FFFF`` may be returned because of
+        the 32-bit unsigned value of ``-1``.
         However, :attr:`.TorrentProperties.creation_date` is directly
         returned regardless of its validity.
         When its value is undefined (usually represented as zero), the
         returned value usually offsets by time zone
-        (e.g. `-28800` for UTC+8, `28800` for UTC-8).
+        (e.g. ``-28800`` for UTC+8, ``28800`` for UTC-8).
     """
 
     # Static mappings
@@ -100,18 +100,6 @@ class DateTimeConverter(Converter):
             return epoch + timedelta(seconds=value)
         else:
             return datetime.fromtimestamp(value, tz)
-        #
-        # if value < 0:
-        #     if self._neg_mode == NegativeMode.CONVERT:
-        #         epoch = datetime.fromtimestamp(0)
-        #         dt = timedelta(seconds=value)
-        #         return epoch + dt
-        #     elif self._neg_mode == NegativeMode.ERROR:
-        #         raise ValueError(f"Negative value: {value!r}")
-        #     else:
-        #         raise AssertionError("unreachable")
-        # else:
-        #     return datetime.fromtimestamp(value, tz)
 
 
 class DurationConverter(Converter):
@@ -146,7 +134,7 @@ class ScalarListConverter(Converter):
     Split string into list.
 
     An input string is split with a separator. Empty items are discarded.
-    An optional function `cast` may be provided to transform items.
+    An optional function ``cast`` may be provided to transform items.
     """
 
     def __init__(self, sep: str, cast: Optional[Callable[[str], Any]] = None):
@@ -170,7 +158,7 @@ class ScalarListConverter(Converter):
 
 class EnumConverter(Converter):
     """
-    Map value to `Enum` member.
+    Convert values to members of enums.
     """
 
     def __init__(self, enum_type: Type[E]):

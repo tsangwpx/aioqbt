@@ -7,6 +7,12 @@ Minutes = NewType("Minutes", int)
 
 
 class TimeUnit(Enum):
+    """
+    TimeUnit enum.
+
+    Conversion helper between time units
+    """
+
     NANOSECONDS = 1
     MICROSECONDS = 1_000
     MILLISECONDS = 1_000_000
@@ -53,4 +59,5 @@ class TimeUnit(Enum):
 
     @classmethod
     def convert(cls, d: float, src: "TimeUnit", dst: "TimeUnit") -> float:
+        """Convert a numeric duration in some unit to one in another."""
         return dst.from_duration(d, src)

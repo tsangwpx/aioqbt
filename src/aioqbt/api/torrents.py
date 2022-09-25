@@ -56,7 +56,9 @@ class TorrentsAPI(APIGroup):
         tag: Optional[str] = None,  # since API v2.8.3
     ) -> List[TorrentInfo]:
         """
-        Return :class:`.TorrentInfo` list.
+        Get a list of :class:`TorrentInfo`.
+
+        There is :class:`.InfoFilter` enum to substitute ``str`` in ``filter``.
         """
         if isinstance(filter, InfoFilter):
             filter = str(filter)
@@ -296,7 +298,7 @@ class TorrentsAPI(APIGroup):
 
     async def file_prio(self, hash: InfoHash, id: Iterable[int], priority: int):
         """
-        Prioritize files within a torrent.
+        Prioritize files in a torrent.
 
         ``id`` are a list of file indices.
         Use :class:`.FilePriority` to specify ``priority``.
@@ -538,7 +540,7 @@ class TorrentsAPI(APIGroup):
     @virtual
     async def set_sequential_download(self, hashes: InfoHashesOrAll, value: bool):
         """
-        Change `seq_dl` for torrents.
+        Change ``seq_dl`` for torrents.
 
         This method is virtual that torrents in interest are filtered
         and flags are toggled in steps.
@@ -563,7 +565,7 @@ class TorrentsAPI(APIGroup):
     @virtual
     async def set_first_last_piece_prio(self, hashes: InfoHashesOrAll, value: bool):
         """
-        Change `f_l_piece_prio` for torrents.
+        Change ``f_l_piece_prio`` for torrents.
 
         This method is virtual that torrents in interest are filtered
         and flags are toggled in steps.
@@ -615,8 +617,8 @@ class TorrentsAPI(APIGroup):
         The method is available since API v2.4.0 and
         its signature depends on client and API versions.
 
-        Until API v2.8.0: ``rename_file(hash, id, name)``.
-        File ``id`` is given by item index of :meth:`.files`.
+        Until API v2.8.0: ``rename_file(hash, id, name)``,
+        where ``id`` is item index in :meth:`.files`.
 
         After API v2.8.0: ``rename_file(hash, old_path, new_path)``.
 
@@ -658,7 +660,10 @@ class TorrentsAPI(APIGroup):
 @dataclass
 class AddFormBuilder:
     """
-    Helper to build :class:`~aiohttp.FormData`.
+    Helper to build :class:`~aiohttp.FormData` in :meth:`~TorrentsAPI.add`.
+
+    :class:`.AddFormBuilder` is an immutable object.
+    Builder methods return a modified copy instead of updating itself.
     """
 
     client_version: Optional[ClientVersion] = None

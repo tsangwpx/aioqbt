@@ -145,6 +145,9 @@ def from_response(resp: aiohttp.ClientResponse) -> APIError:
     Construct an exception from a response.
 
     The type of the exception is determined by the status of the response.
+
+    :param resp: response resulting in errors
+    :return exception
     """
     # FIXME: use the response content in the message
     exc_type = _EXC_TYPES.get(resp.status, APIError)

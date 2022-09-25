@@ -45,15 +45,6 @@ K = TypeVar("K")
 class APIClient:
     """
     Represent a remote qBittorrent client.
-
-    API methods are grouped into properties:
-        - :attr:`.app`
-        - :attr:`.auth`
-        - :attr:`.log`
-        - :attr:`.sync`
-        - :attr:`.torrents`
-        - :attr:`.transfer`
-
     """
 
     def __init__(
@@ -491,12 +482,12 @@ async def create_client(
     """
     Create :class:`APIClient`.
 
-    When both `username` and `password` are given
+    When both ``username`` and ``password`` are given
     and a session is successfully authenticated,
     :class:`APIClient` is returned and versions are injected.
     Otherwise, :exc:`LoginError <aioqbt.exc.LoginError>` is raised.
 
-    When both `username` and `password` are omitted,
+    When both ``username`` and ``password`` are omitted,
     the client returned may need authentication and further configurations.
 
     :param str url: URL to WebUI API, for example, ``https://localhost:8080/api/v2/``
@@ -567,10 +558,7 @@ def since(version: Union[APIVersion, Tuple[int, int, int]]) -> Callable[[T], T]:
 
 def virtual(fn=None):
     """
-    Mark function not backing by endpoint.
-
-    :param fn:
-    :return:
+    Mark function not backed by endpoint.
     """
     if fn is None:
         return virtual  # pragma: no cover

@@ -42,9 +42,9 @@ class TransferAPI(APIGroup):
     @virtual
     async def set_speed_limits_mode(self, value: int):
         """
-        Change `speed_limits_mode`.
+        Change ``speed_limits_mode``.
 
-        This method is virtual that `speed_limits_mode` is queried and
+        This method is virtual that ``speed_limits_mode`` is queried and
         toggled if needed.
         """
         if value not in (0, 1):
