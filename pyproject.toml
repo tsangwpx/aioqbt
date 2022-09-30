@@ -1,26 +1,38 @@
 [build-system]
-requires = ["setuptools >= 62", "wheel"]
+requires = [
+    "setuptools >= 61",
+    "setuptools_scm",
+]
 build-backend = "setuptools.build_meta"
 
+# PEP 621: Storing project metadata in pyproject.toml
+# https://peps.python.org/pep-0621/
 [project]
 name = "aioqbt"
 version = "0.5.1"
+description = "API library for qBittorrent with asyncio"
+readme = "README.md"
 authors = [
     { name = "Aaron Tsang" },
 ]
+license = { text = "MIT" }
+keywords = ["qbittorrent", "asyncio"]
 requires-python = ">=3.7"
 classifiers = [
     # classifier list on https://pypi.org/classifiers/
     "Development Status :: 4 - Beta",
+    "Framework :: AsyncIO",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.7",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+    "Typing :: Typed",
 ]
-# dependencies is a list of PEP 508 strings
+
+# dependencies updated on 25 Sep 2022
 dependencies = [
     "aiohttp >= 3.8.1, < 4",
     "typing-extensions >= 4.0.1, < 5"
@@ -42,6 +54,11 @@ test = [
     "pytest-asyncio ~= 0.19.0, < 1",
     "coverage[toml] ~= 6.4.4",
 ]
+
+[project.urls]
+Homepage = "https://github.com/tsangwpx/aioqbt"
+Documentation = "https://aioqbt.readthedocs.io/en/latest/"
+Source = "https://github.com/tsangwpx/aioqbt"
 
 [tool.setuptools.packages.find]
 where = ["src"]
