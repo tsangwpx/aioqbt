@@ -1,6 +1,4 @@
 import asyncio
-import contextlib
-import socket
 from typing import Union
 
 import aiohttp
@@ -8,6 +6,7 @@ import aiohttp.web as aiohttp_web
 import pytest
 from aiohttp.hdrs import RETRY_AFTER
 from helper.service import LoginInfo
+from helper.web import temporary_site_handler
 
 from aioqbt import exc
 from aioqbt.client import APIClient, create_client
@@ -115,27 +114,6 @@ async def test_server_disconnected():
     await asyncio.wait(futures)
 
 
-@contextlib.asynccontextmanager
-async def _temporary_site(runner: aiohttp_web.BaseRunner):
-    # bind a random TCP socket
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.bind(("127.0.0.1", 0))
-
-    # start server site
-    site = aiohttp_web.SockSite(runner, sock)
-    await site.start()
-
-    # construct site URL
-    url = site.name
-
-    try:
-        yield url
-    finally:
-        # shutdown server and socket
-        await site.stop()
-        sock.close()
-
-
 @pytest.mark.asyncio
 async def test_retry_after_header():
 
@@ -159,12 +137,7 @@ async def test_retry_after_header():
             }
         )
 
-    # start web server
-    server = aiohttp_web.Server(handler)
-    runner = aiohttp_web.ServerRunner(server)
-    await runner.setup()
-
-    async with _temporary_site(runner) as url, APIClient(url) as client:
+    async with temporary_site_handler(handler) as url, APIClient(url) as client:
         with pytest.raises(exc.APIError, match="Service Unavailable"):
             resp = await client.request(
                 "GET",
@@ -196,11 +169,6 @@ async def test_error_message(body: Union[str, bytes], match):
             body=body,
         )
 
-    # start web server
-    server = aiohttp_web.Server(handler)
-    runner = aiohttp_web.ServerRunner(server)
-    await runner.setup()
-
-    async with _temporary_site(runner) as url, APIClient(url) as client:
+    async with temporary_site_handler(handler) as url, APIClient(url) as client:
         with pytest.raises(exc.BadRequestError, match=match):
             await client.request("GET", "/")
