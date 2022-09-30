@@ -55,10 +55,12 @@ class APIError(AQError):
     def from_response(
         cls,
         resp: aiohttp.ClientResponse,
+        message: str = "",
     ):
         """Create an exception instance based on a response."""
+
         return cls(
-            message=str(resp.reason),
+            message=message or str(resp.reason),
             status=resp.status,
             resp=resp,
         )
@@ -131,24 +133,12 @@ class UnsupportedMediaTypeError(APIError):
     """
 
 
-_EXC_TYPES = {
+# lookup error class by status
+# {status: exc_class}
+_ERROR_TABLE = {
     400: BadRequestError,
     403: ForbiddenError,
     404: NotFoundError,
     409: ConflictError,
     415: UnsupportedMediaTypeError,
 }
-
-
-def from_response(resp: aiohttp.ClientResponse) -> APIError:
-    """
-    Construct an exception from a response.
-
-    The type of the exception is determined by the status of the response.
-
-    :param resp: response resulting in errors
-    :return exception
-    """
-    # FIXME: use the response content in the message
-    exc_type = _EXC_TYPES.get(resp.status, APIError)
-    return exc_type.from_response(resp)

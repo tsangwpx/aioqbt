@@ -188,6 +188,7 @@ class APIClient:
         attempt_count = 1
         while True:
             resp: Optional[aiohttp.ClientResponse] = None
+            resp_body: bytes = b""
 
             try:
                 resp = await self._http.request(
@@ -205,8 +206,7 @@ class APIClient:
 
                 # treat all status except 200 an error
                 # Read the response before release the response
-                _body = await resp.read()  # noqa: F841
-
+                resp_body = await resp.read()
                 resp.release()
 
                 raise aiohttp.ClientResponseError(
@@ -253,12 +253,13 @@ class APIClient:
 
                 await asyncio.sleep(sleeping_time)
             else:
-                self._handle_error(last_exc, resp)
+                self._handle_error(last_exc, resp, resp_body)
 
     def _handle_error(
         self,
         error: Exception,
         resp: Optional[aiohttp.ClientResponse],
+        resp_body: bytes,
     ):
         """
         Handle errors which are not retryable.
@@ -268,8 +269,13 @@ class APIClient:
             # raise the last error if no resp available
             raise error
 
-        # construct an exception according to resp status
-        raise exc.from_response(resp) from error
+        try:
+            message = resp_body.decode("utf-8", "strict")
+        except UnicodeDecodeError:
+            message = ""
+
+        exc_class = exc._ERROR_TABLE.get(resp.status, exc.APIError)
+        raise exc_class.from_response(resp, message) from error
 
     async def request_text(
         self,

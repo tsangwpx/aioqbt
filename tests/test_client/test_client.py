@@ -1,6 +1,7 @@
 import asyncio
 import contextlib
 import socket
+from typing import Union
 
 import aiohttp
 import aiohttp.web as aiohttp_web
@@ -175,3 +176,31 @@ async def test_retry_after_header():
                 pass
 
         assert try_count == max_attempts
+
+
+@pytest.mark.parametrize(
+    ("body", "match"),
+    (
+        (None, "Bad Request"),
+        ("dummy dummy", "dummy dummy"),
+        ("\u4e2d\u6587", "\\u4e2d\\u6587"),
+        (b"\x80", "Bad Request"),
+    ),
+)
+@pytest.mark.asyncio
+async def test_error_message(body: Union[str, bytes], match):
+    # define request handler
+    async def handler(request: aiohttp_web.BaseRequest):
+        return aiohttp_web.Response(
+            status=aiohttp_web.HTTPBadRequest.status_code,
+            body=body,
+        )
+
+    # start web server
+    server = aiohttp_web.Server(handler)
+    runner = aiohttp_web.ServerRunner(server)
+    await runner.setup()
+
+    async with _temporary_site(runner) as url, APIClient(url) as client:
+        with pytest.raises(exc.BadRequestError, match=match):
+            await client.request("GET", "/")
