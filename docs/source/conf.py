@@ -57,7 +57,12 @@ html_css_files = [
 ]
 
 # -- Options for extlinks
-extlinks = {}
+extlinks = {
+    "APIWiki": (
+        "https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)%s",
+        "[APIWiki %s]",
+    )
+}
 
 # -- Options for autodoc
 autodoc_member_order = "bysource"

@@ -1,5 +1,7 @@
 """
 API methods by group.
+
+See also :APIWiki:`the WebUI API reference <>` on qBittorrent wiki.
 """
 
 from aioqbt.api.app import AppAPI
