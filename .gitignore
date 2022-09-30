@@ -131,3 +131,5 @@ dmypy.json
 # JetBrains IDEs
 .idea/
 
+# VSCode
+.vscode/
