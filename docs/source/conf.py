@@ -9,12 +9,9 @@ import sys
 _HERE = os.path.dirname(__file__)
 _PROJECT_ROOT = os.path.abspath(os.path.join(_HERE, "../.."))
 
-sys.path.extend(
-    [
-        os.path.join(_PROJECT_ROOT, "src"),
-        os.path.join(_HERE, "_ext"),
-    ]
-)
+sys.path.append(os.path.join(_HERE, "_ext"))
+
+import aioqbt
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -22,7 +19,7 @@ sys.path.extend(
 project = "aioqbt"
 copyright = "2022, Aaron"
 author = "Aaron"
-version = "0.5.0"
+version = aioqbt.__version__
 release = version
 
 # -- General configuration ---------------------------------------------------
