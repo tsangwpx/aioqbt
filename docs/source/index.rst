@@ -9,15 +9,15 @@ Check out :doc:`usage` section for further information, including how to
 
 .. note::
 
-   This project is in beta stage.
+    This project is in beta stage.
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+    :maxdepth: 2
+    :caption: Contents:
 
-   usage
-   reference
-
+    usage
+    advanced
+    reference
 
 
 Indices and tables

@@ -13,7 +13,7 @@ To use ``aioqbt``, first install it using pip:
 
 .. code-block:: console
 
-   $ pip install aioqbt
+    $ pip install aioqbt
 
 Creating clients
 ----------------
@@ -92,11 +92,52 @@ For example, to access the ``torrents/addTrackers`` endpoint, use
     * ``addTrackers`` in camelCase is renamed to ``add_trackers()`` in snake_case.
     * Case conversion also applies to argument names.
 
-Here are available API groups and their properties:
 
-* :class:`.TorrentsAPI` via :attr:`~.APIClient.torrents`.
-* :class:`.AppAPI` via :attr:`~.APIClient.app`.
-* :class:`.AuthAPI` via :attr:`~.APIClient.auth`.
-* :class:`.LogAPI` via :attr:`~.APIClient.log`.
-* :class:`.SyncAPI` via :attr:`~.APIClient.sync`.
-* :class:`.TransferAPI` via :attr:`~.APIClient.transfer`.
+Supported APIs
+------------------
+
+APIs are supported as needed.
+Feature requests are welcome to discuss use-case details on :issue:`GitHub issues <>`.
+
+The following table summarizes currently available APIs
+and the corresponding attributes in :class:`.APIClient`.
+
+.. list-table::
+    :header-rows: 1
+
+    * - API Group
+      - Attribute
+      - Reference
+      - Notes
+    * - :APIWiki:`Authentication <#authentication>`
+      - :attr:`~.APIClient.auth`
+      - :class:`~.AuthAPI`
+      -
+    * - :APIWiki:`Application <#application>`
+      - :attr:`~.APIClient.app`
+      - :class:`~.AppAPI`
+      - ``preferences`` is not supported.
+    * - :APIWiki:`Log <#log>`
+      - :attr:`~.APIClient.log`
+      - :class:`~.LogAPI`
+      -
+    * - :APIWiki:`Sync <#sync>`
+      - :attr:`~.APIClient.sync`
+      - :class:`~.SyncAPI`
+      -
+    * - :APIWiki:`Transfer info <#transfer-info>`
+      - :attr:`~.APIClient.transfer`
+      - :class:`~.TransferAPI`
+      -
+    * - :APIWiki:`Torrent management <#torrent-management>`
+      - :attr:`~.APIClient.torrents`
+      - :class:`~.TorrentsAPI`
+      -
+    * - :APIWiki:`RSS <#rss-experimental>`
+      -
+      -
+      - Unsupported
+    * - :APIWiki:`Search <#search>`
+      -
+      -
+      - Unsupported

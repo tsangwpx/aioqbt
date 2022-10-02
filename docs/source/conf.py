@@ -48,17 +48,27 @@ intersphinx_mapping = {
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
-html_theme_options = {}
+html_theme_options = {
+    "style_external_links": True,
+}
+html_context = {
+    "display_github": True,
+    "github_user": "tsangwpx",
+    "github_repo": "aioqbt",
+    "github_version": "main",
+    "conf_py_path": "/docs/source/",
+}
 html_css_files = [
     "custom.css",
 ]
 
 # -- Options for extlinks
 extlinks = {
+    "issue": ("https://github.com/tsangwpx/aioqbt/issues/%s", "issue %s"),
     "APIWiki": (
         "https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)%s",
         "[APIWiki %s]",
-    )
+    ),
 }
 
 # -- Options for autodoc

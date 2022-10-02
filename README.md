@@ -10,7 +10,13 @@ It features async typed APIs and object-based results.
 
 https://aioqbt.readthedocs.io/en/latest/
 
-## Example
+## Quick Start
+
+Install with `pip`
+
+```shell
+$ pip install aioqbt
+```
 
 ```python
 import asyncio
@@ -40,3 +46,7 @@ async def run():
 if __name__ == '__main__':
     asyncio.run(run())
 ```
+
+See [detailed usage on Read the Docs][1].
+
+[1]: https://aioqbt.readthedocs.io/en/latest/usage.html
