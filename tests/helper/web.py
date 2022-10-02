@@ -16,7 +16,8 @@ async def temporary_site(runner: web.BaseRunner):
     await site.start()
 
     # construct site URL
-    url = site.name
+    host, port = sock.getsockname()
+    url = f"http://localhost:{port}"
 
     try:
         yield url
