@@ -233,6 +233,7 @@ async def test_manipulation(client: APIClient):
 
 @pytest.mark.asyncio
 async def test_rename_file(client: APIClient):
+    assert client.api_version is not None
     if client.api_version >= (2, 7, 0):
         pytest.skip("rename file is changed after API v2.8.0 or client v4.3.3")
 

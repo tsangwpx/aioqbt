@@ -49,6 +49,7 @@ async def test_transfer(client: APIClient):
 
 @pytest.mark.asyncio
 async def test_ban_peers(client: APIClient):
+    assert client.api_version is not None
     if client.api_version < (2, 3, 0):
         pytest.skip("ban_peers requires API v2.3.0")
 

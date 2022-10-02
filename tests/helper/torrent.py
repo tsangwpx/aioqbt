@@ -27,7 +27,7 @@ class PieceHasher:
             raise ValueError(f"piece_length = {piece_length!r}")
 
         self._finalized = False
-        self._pieces = []
+        self._pieces: List[bytes] = []
         self._piece_length = piece_length
         self._hasher = sha1()
         self._hasher_rem = piece_length

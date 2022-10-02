@@ -7,7 +7,7 @@ import sys
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import Any, List, Optional
 
 import aiohttp
 
@@ -19,7 +19,7 @@ class LoginInfo:
     url: str
     username: str
     password: str
-    cookies: list = field(default_factory=list)
+    cookies: List[Any] = field(default_factory=list)
 
 
 def parse_login(spec: str) -> LoginInfo:
@@ -36,6 +36,9 @@ def parse_login(spec: str) -> LoginInfo:
         hostname = parts.netloc
 
     url = f"{parts.scheme}://{hostname}{parts.path}"
+
+    assert username is not None
+    assert password is not None
 
     return LoginInfo(
         url=url,
@@ -93,6 +96,8 @@ def server_process(
 
         stdout = stdout or b""
         stderr = stderr or b""
+
+        assert logger is not None
 
         for line in stdout.splitlines():
             logger.info("server stdout %.3f: %r", ts, line)

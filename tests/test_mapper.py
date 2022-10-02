@@ -30,7 +30,7 @@ def test_mapper_object():
     assert inst.string == "hello"
     assert inspect_raw_data(inst) == data
 
-    assert inst.extra == "world"
+    assert inst.extra == "world"  # type: ignore[attr-defined]
 
     assert inst._private == "class variable"
     inst._private = "inst variable"

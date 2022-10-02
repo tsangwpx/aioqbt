@@ -188,7 +188,7 @@ def test_put_variants():
     pd.required_path("c", "hello/world")
     pd.required_path("d", PureWindowsPath("hello", "world"))
     pd.required_path("e", PurePosixPath("hello", "world"))
-    pd.required_path("g", b"hello\\world")
+    pd.required_path("g", r"hello\world")
 
     assert pd.to_dict() == dict.fromkeys(
         ("b", "c", "d", "e", "g"),
