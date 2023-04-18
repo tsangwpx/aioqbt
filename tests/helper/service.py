@@ -137,7 +137,12 @@ def server_process(
     finally:
         logger.debug("Terminate process %d", process.pid)
         process.terminate()
-        do_communicate(timeout=8)
+
+        try:
+            do_communicate(timeout=3)
+        except subprocess.TimeoutExpired:
+            logger.warning("Kill process %d", process.pid)
+            process.kill()
 
 
 @contextlib.asynccontextmanager
