@@ -17,11 +17,10 @@ from typing import (
 
 from aioqbt.bittorrent import InfoHash, InfoHashes, InfoHashesOrAll, get_info_hash
 from aioqbt.chrono import TimeUnit
+from aioqbt.typing import StrPath
 
 T = TypeVar("T")
 PrepareFn = Callable[[T], Union[float, str]]
-
-_PathLike = Union[str, os.PathLike[str]]
 
 _CAMEL_PATTERN = re.compile(r"(?!^)([A-Z]+)", re.ASCII)
 
@@ -230,7 +229,7 @@ class ParamDict(MutableMapping[str, str]):
     def required_path(
         self,
         key: str,
-        value: _PathLike,
+        value: StrPath,
         *,
         param: Optional[str] = None,
     ):
@@ -239,7 +238,7 @@ class ParamDict(MutableMapping[str, str]):
     def optional_path(
         self,
         key: str,
-        value: Optional[_PathLike],
+        value: Optional[StrPath],
         *,
         param: Optional[str] = None,
     ):
@@ -324,7 +323,7 @@ def _prepare_bool(b: bool) -> str:
     return "true" if bool(b) else "false"
 
 
-def _prepare_path(p: _PathLike) -> str:
+def _prepare_path(p: StrPath) -> str:
     """
     Convert path-like object to str
     """

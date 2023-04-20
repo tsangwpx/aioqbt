@@ -23,14 +23,13 @@ from aioqbt.api.types import (
 from aioqbt.bittorrent import InfoHash, InfoHashes, InfoHashesOrAll, get_info_hash
 from aioqbt.chrono import TimeUnit
 from aioqbt.client import APIClient, APIGroup, since, virtual
+from aioqbt.typing import StrPath
 from aioqbt.version import APIVersion, ClientVersion, param_version_check, version_check
 
 __all__ = (
     "AddFormBuilder",
     "TorrentsAPI",
 )
-
-_PathLike = Union[str, os.PathLike[str]]
 
 
 def _check_iterable_except_str(param: str, value: Iterable[Any]):
@@ -383,7 +382,7 @@ class TorrentsAPI(APIGroup):
     async def set_location(
         self,
         hashes: InfoHashesOrAll,
-        location: _PathLike,
+        location: StrPath,
     ):
         data = ParamDict.with_hashes_or_all(hashes)
         data.required_path("location", location)
@@ -425,7 +424,7 @@ class TorrentsAPI(APIGroup):
             "torrents/categories",
         )
 
-    async def create_category(self, category: str, save_path: _PathLike):
+    async def create_category(self, category: str, save_path: StrPath):
         data = ParamDict()
         data.required_str("category", category)
         data.required_path("savePath", save_path)
@@ -436,7 +435,7 @@ class TorrentsAPI(APIGroup):
             data=data,
         )
 
-    async def edit_category(self, category: str, save_path: _PathLike):
+    async def edit_category(self, category: str, save_path: StrPath):
         # since API v2.1.0
         # empty save_path ("") is default save path
 
@@ -727,7 +726,7 @@ class AddFormBuilder:
         return self.include_file(data, filename)  # pragma: no cover
 
     @copy_self
-    def savepath(self, savepath: _PathLike):
+    def savepath(self, savepath: StrPath):
         """Set ``savepath``"""
         self._savepath = _convert_path(savepath)
         return self
@@ -942,6 +941,6 @@ def _convert_duration(
     return delta
 
 
-def _convert_path(path: _PathLike) -> str:
+def _convert_path(path: StrPath) -> str:
     """Convert path-like objects to POSIX path str"""
     return os.fsdecode(path).replace("\\", "/")
