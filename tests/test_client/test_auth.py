@@ -27,4 +27,4 @@ async def test_logout(mock_login: LoginInfo):
         await client.auth.logout()
 
         with pytest.raises(exc.ForbiddenError):
-            await client.app.build_info()
+            await client.app.version()
