@@ -234,6 +234,10 @@ async def test_manipulation(client: APIClient):
 @pytest.mark.asyncio
 async def test_rename_file(client: APIClient):
     assert client.api_version is not None
+
+    if client.api_version < (2, 4, 0):
+        pytest.skip("torrents/rename is available since API v2.4.0")
+
     if client.api_version >= (2, 7, 0):
         pytest.skip("rename file is changed after API v2.8.0 or client v4.3.3")
 
@@ -514,6 +518,10 @@ async def test_categories(client: APIClient):
 
 @pytest.mark.asyncio
 async def test_tags(client: APIClient):
+    assert client.api_version is not None
+    if client.api_version < (2, 3, 0):
+        pytest.skip("tags methods are available since API v2.3.0")
+
     sample = make_torrent_single("tags")
     info_hash = sample.hash
 
