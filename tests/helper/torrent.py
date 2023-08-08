@@ -177,7 +177,8 @@ async def temporary_torrents(client: APIClient, *samples: TorrentData, paused: b
             torrents = await client.torrents.info(hashes=hashes)
             return len(torrents) == len(hashes)
 
-        assert await busy_wait_for(cond_added)
+        success = await busy_wait_for(cond_added)
+        assert success, f"Failed to add {len(samples)} torrents: {samples[0].name}"
 
     try:
         yield torrents

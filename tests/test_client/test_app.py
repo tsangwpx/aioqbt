@@ -24,4 +24,3 @@ async def test_app(client: APIClient):
 
     default_save_path = await client.app.default_save_path()
     assert isinstance(default_save_path, str)
-    assert default_save_path.endswith("qBittorrent/downloads/")

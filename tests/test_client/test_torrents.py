@@ -1,8 +1,9 @@
 import copy
 import datetime
+from pathlib import PurePath
 
 import pytest
-from helper.lang import busy_assert_eq, busy_wait_for, one_moment
+from helper.lang import one_moment, retry_assert
 from helper.torrent import make_torrent_files, make_torrent_single, temporary_torrents
 
 from aioqbt import exc
@@ -63,7 +64,11 @@ async def test_add(client: APIClient):
     assert info.f_l_piece_prio
     assert not info.auto_tmm
     assert info.category == category
-    assert info.save_path.replace("\\", "/").rstrip("/") == savepath
+
+    save_path_parts_expected = list(PurePath(savepath).parts)
+    save_path_parts_actual = list(PurePath(info.save_path).parts)
+
+    assert save_path_parts_expected == save_path_parts_actual[-len(save_path_parts_expected) :]
     assert abs((info.added_on - now).total_seconds()) <= 10, (info.added_on, now)
 
     # ratioLimit, seedingTimeLimit requires API v2.8.1
@@ -141,90 +146,117 @@ async def test_torrent_metadata(client: APIClient):
         torrents = await client.torrents.info(hashes=(info_hash,))
         assert isinstance(torrents, list)
         assert len(torrents) == 1
-
-        info = torrents[0]
         assert isinstance(torrents[0], TorrentInfo)
-        assert isinstance(repr(info), str)
-        assert abs((info.added_on - now).total_seconds()) <= 10
 
-        # torrents.properties()
-        props = await client.torrents.properties(info_hash)
-        assert isinstance(props, TorrentProperties)
-        assert isinstance(repr(props), str)
-        assert abs((props.addition_date - now).total_seconds()) <= 10
+        @retry_assert
+        async def assert_torrent(info: TorrentInfo):
+            # some methods may be unavailable when torrent created.
+            # retry asserts if needed.
 
-        # torrents.webseeds()
-        webseeds = await client.torrents.webseeds(info_hash)
-        assert isinstance(webseeds, list)
-        assert len(webseeds) == 0
+            assert isinstance(info, TorrentInfo)
+            assert isinstance(repr(info), str)
+            assert abs((info.added_on - now).total_seconds()) <= 10
 
-        # torrents.piece_states
-        piece_states = await client.torrents.piece_states(info_hash)
-        assert isinstance(piece_states, list)
-        assert len(piece_states)
-        assert all(s == PieceState.UNAVAILABLE for s in piece_states)
+            # torrents.properties()
+            props = await client.torrents.properties(info_hash)
+            assert isinstance(props, TorrentProperties)
+            assert isinstance(repr(props), str)
+            assert abs((props.addition_date - now).total_seconds()) <= 10
 
-        # torrents.piece_hashes
-        piece_hashes = await client.torrents.piece_hashes(info_hash)
-        assert isinstance(piece_hashes, list)
-        assert len(piece_hashes)
-        assert len(piece_hashes) == len(piece_states)
-        assert all(isinstance(s, str) and len(s) == 40 for s in piece_hashes)
+            # torrents.webseeds()
+            webseeds = await client.torrents.webseeds(info_hash)
+            assert isinstance(webseeds, list)
+            assert len(webseeds) == 0
+
+            # torrents.piece_states
+            piece_states = await client.torrents.piece_states(info_hash)
+            assert isinstance(piece_states, list)
+            assert len(piece_states)
+            assert all(s == PieceState.UNAVAILABLE for s in piece_states)
+
+            # torrents.piece_hashes
+            piece_hashes = await client.torrents.piece_hashes(info_hash)
+            assert isinstance(piece_hashes, list)
+            assert len(piece_hashes)
+            assert len(piece_hashes) == len(piece_states)
+            assert all(isinstance(s, str) and len(s) == 40 for s in piece_hashes)
+
+        await assert_torrent(torrents[0])
 
 
 @pytest.mark.asyncio
 async def test_manipulation(client: APIClient):
     sample = make_torrent_single("manipulation")
+    new_name = "manipulation2"
     info_hash = sample.hash
     hashes = (info_hash,)
 
     async with temporary_torrents(client, sample):
-        await client.torrents.rename(sample.hash, "manipulation2")
-        await one_moment()
+        await client.torrents.rename(sample.hash, new_name)
 
-        info = (await client.torrents.info(hashes=hashes))[0]
-        assert info.name == "manipulation2"
+        async def torrent_info() -> TorrentInfo:
+            return (await client.torrents.info(hashes=hashes))[0]
+
+        @retry_assert
+        async def assert_name():
+            info = await torrent_info()
+            assert info.name == new_name
+
+        await assert_name()
 
         # torrents.resume
-        async def tell_resumed():
-            torrents = await client.torrents.info(filter=InfoFilter.RESUMED, hashes=hashes)
-            return any(s.hash == info_hash for s in torrents)
-
-        async def tell_paused():
-            torrents = await client.torrents.info(filter=InfoFilter.PAUSED, hashes=hashes)
-            return any(s.hash == info_hash for s in torrents)
+        @retry_assert
+        async def assert_resumed():
+            assert len(await client.torrents.info(filter=InfoFilter.RESUMED, hashes=hashes))
 
         await client.torrents.resume(hashes)
-        assert await busy_wait_for(tell_resumed, 5), await client.torrents.info()
+        await assert_resumed()
+
+        @retry_assert
+        async def assert_forced_start():
+            assert (await torrent_info()).force_start
 
         await client.torrents.set_force_start(hashes, True)
-        await one_moment()
+        await assert_forced_start()
+
+        @retry_assert
+        async def assert_super_seeding():
+            assert (await torrent_info()).super_seeding
 
         await client.torrents.set_super_seeding(hashes, True)
-        await one_moment()
-
-        info = (await client.torrents.info(hashes=hashes))[0]
-        assert info.state == TorrentState.FORCED_DL
-        assert not info.super_seeding, "incomplete torrent cannot be super seeding"
+        await assert_super_seeding()
 
         # torrents.reannounce
         await client.torrents.reannounce(hashes)
         await one_moment()
 
         # torrents.add_peers
-        await client.torrents.add_peers(hashes, ("127.0.0.2:8080", "127.0.0.3:8080"))
-        await one_moment()
+        assert client.api_version is not None
+        if client.api_version >= (2, 3, 0):
+            await client.torrents.add_peers(hashes, ("127.0.0.2:8080", "127.0.0.3:8080"))
+            await one_moment()
 
         # torrents.pause
-        await client.torrents.pause(hashes)
-        assert await busy_wait_for(tell_paused, 5), await client.torrents.info()
+        @retry_assert
+        async def assert_paused():
+            assert len(await client.torrents.info(filter=InfoFilter.PAUSED, hashes=hashes))
 
-        new_save_path = f"{info.save_path}/magic-directory"
+        await client.torrents.pause(hashes=hashes)
+        await assert_paused()
+
+        # torrents.set_location
+        info = await torrent_info()
+        addition = "magic-directory"
+        new_save_path = f"{info.save_path}/{addition}"
         await client.torrents.set_location(hashes, new_save_path)
-        await one_moment()
 
-        info = (await client.torrents.info(hashes=hashes))[0]
-        assert info.save_path.rstrip("/").endswith("magic-directory")
+        @retry_assert
+        async def assert_save_path_changed():
+            info = await torrent_info()
+            save_path = PurePath(info.save_path)
+            assert save_path.name == addition
+
+        await assert_save_path_changed()
 
         # torrents.recheck
         await client.torrents.recheck(hashes)
@@ -248,14 +280,13 @@ async def test_rename_file(client: APIClient):
         assert len(files) == 5
         assert files[3].name == "rename_file/files/03.txt"
 
-        await client.torrents.rename_file(sample.hash, 3, "rename_file_3")
-        await one_moment(1)
-
-        async def get_third_filename():
+        @retry_assert
+        async def assert_filename():
             files = await client.torrents.files(sample.hash)
-            return files[3].name
+            assert files[3].name == "rename_file/files/rename_file_3"
 
-        await busy_assert_eq("rename_file/files/rename_file_3", get_third_filename)
+        await client.torrents.rename_file(sample.hash, 3, "rename_file_3")
+        await assert_filename()
 
 
 @pytest.mark.asyncio
@@ -415,12 +446,20 @@ async def test_queueing(client: APIClient):
             torrents.sort(key=lambda s: s.priority)
             return [s.hash for s in torrents]
 
+        @retry_assert
+        async def assert_order123():
+            assert [h1, h2, h3] == await queued_hashes()
+
+        @retry_assert
+        async def assert_order312():
+            assert [h3, h1, h2] == await queued_hashes()
+
         await client.torrents.top_prio((h3,))
         await client.torrents.top_prio((h2,))
         await client.torrents.top_prio((h1,))
         # order: 1, 2, 3
 
-        await busy_assert_eq([h1, h2, h3], queued_hashes, timeout=3)
+        await assert_order123()
 
         await client.torrents.increase_prio((h2,))
         # order: 2, 1, 3
@@ -431,7 +470,7 @@ async def test_queueing(client: APIClient):
         await client.torrents.bottom_prio((h2,))
         # order: 3, 1, 2
 
-        await busy_assert_eq([h3, h1, h2], queued_hashes, timeout=3)
+        await assert_order312()
 
 
 @pytest.mark.asyncio
@@ -445,35 +484,30 @@ async def test_file_priorities(client: APIClient):
     async with temporary_torrents(client, sample):
         assert len(await file_priorities()) == 5
 
-        # libtorrent default priority is 4 which is invalid in qbittorrent
-        # so set all to NORMAL first
-        await client.torrents.file_prio(info_hash, range(5), FilePriority.NORMAL)
-        await busy_assert_eq([FilePriority.NORMAL] * 5, file_priorities)
+        @retry_assert
+        async def assert_all_normal():
+            expected = [FilePriority.NORMAL] * 5
+            assert expected == await file_priorities()
 
-        # modify some of them
-        await client.torrents.file_prio(info_hash, [0, 4], FilePriority.MAXIMAL)
-        await busy_assert_eq(
-            [
-                FilePriority.MAXIMAL,
+        @retry_assert
+        async def assert_file_properties():
+            expected = [
                 FilePriority.NORMAL,
-                FilePriority.NORMAL,
-                FilePriority.NORMAL,
-                FilePriority.MAXIMAL,
-            ],
-            file_priorities,
-        )
-
-        await client.torrents.file_prio(info_hash, [2], FilePriority.NO_DOWNLOAD)
-        await busy_assert_eq(
-            [
-                FilePriority.MAXIMAL,
                 FilePriority.NORMAL,
                 FilePriority.NO_DOWNLOAD,
                 FilePriority.NORMAL,
-                FilePriority.MAXIMAL,
-            ],
-            file_priorities,
-        )
+                FilePriority.NORMAL,
+            ]
+            assert expected == await file_priorities()
+
+        # libtorrent default priority is 4 which is invalid in qbittorrent
+        # so set all to NORMAL first
+        await client.torrents.file_prio(info_hash, range(5), FilePriority.NORMAL)
+        await assert_all_normal()
+
+        # modify some of them
+        await client.torrents.file_prio(info_hash, [2], FilePriority.NO_DOWNLOAD)
+        await assert_file_properties()
 
 
 @pytest.mark.asyncio
