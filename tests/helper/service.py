@@ -54,6 +54,30 @@ def parse_login_env(name) -> Optional[LoginInfo]:
     return parse_login(spec)
 
 
+def _wait_port_open(port: int, count: int, pause: float = 1):
+    # connect to a port repeatly until it is open or maximum number of attempts is reached
+    assert count >= 1, count
+
+    for attempt in range(1, count + 1):
+        error: Optional[Exception] = None
+
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            try:
+                sock.connect(("127.0.0.1", port))
+            except ConnectionRefusedError as ex:
+                error = ex
+
+        if error is None:
+            return
+
+        if attempt == count:
+            raise error
+
+        time.sleep(pause)
+
+    raise AssertionError("unreachable")
+
+
 @contextlib.contextmanager
 def server_process(
     profile_path: Path,
@@ -130,6 +154,8 @@ def server_process(
             do_communicate(timeout=1 / 10)
         except subprocess.TimeoutExpired:
             pass
+
+        _wait_port_open(port, 5)
 
         # seem that the stdout is buffered on the child process.
         # WebUI URL cannot be read so "localhost" is a good guess.
