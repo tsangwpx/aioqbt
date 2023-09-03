@@ -164,6 +164,16 @@ class BuildInfo:
 
 
 @dataclass
+class NetworkInterface:
+    """
+    See :meth:`.AppAPI.network_interface_list`.
+    """
+
+    name: str
+    value: str
+
+
+@dataclass
 class TorrentInfo:
     """
     See :meth:`.TorrentsAPI.info`.

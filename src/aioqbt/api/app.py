@@ -1,7 +1,8 @@
 import json
-from typing import Any, Mapping
+from typing import Any, List, Mapping, Optional
 
-from aioqbt.api.types import BuildInfo
+from aioqbt._paramdict import ParamDict
+from aioqbt.api.types import BuildInfo, NetworkInterface
 from aioqbt.client import APIGroup
 from aioqbt.version import version_check
 
@@ -66,4 +67,23 @@ class AppAPI(APIGroup):
         return await self._request_text(
             "GET",
             "app/defaultSavePath",
+        )
+
+    async def network_interface_list(self) -> List[NetworkInterface]:
+        # since v4.2.0, API v2.3.0
+        return await self._request_mapped_list(
+            NetworkInterface,
+            "GET",
+            "app/networkInterfaceList",
+        )
+
+    async def network_interface_address_list(self, iface: Optional[str] = None) -> List[str]:
+        # since v4.2.0, API v2.3.0
+        params = ParamDict()
+        params.put("iface", iface, optional=False, prepare=str, default="")
+
+        return await self._request_json(
+            "GET",
+            "app/networkInterfaceAddressList",
+            params=params,
         )
