@@ -1,8 +1,8 @@
 import re
 from functools import total_ordering
-from typing import Any, NamedTuple, Optional, Tuple
+from typing import Any, NamedTuple, Optional, Tuple, Union
 
-from typing_extensions import Protocol
+from typing_extensions import Protocol, Self
 
 from aioqbt.exc import VersionError
 
@@ -159,6 +159,37 @@ class APIVersion(NamedTuple):
 
     def __str__(self):
         return f"{self.major}.{self.minor}.{self.release}"
+
+    @classmethod
+    def compare(
+        cls,
+        a: Optional[Union[Self, Tuple[int, int, int]]],
+        b: Optional[Union[Self, Tuple[int, int, int]]],
+    ) -> int:
+        """
+        Compare two API versions
+
+        `None` is a special value and is treated as the latest version.
+
+        Return zero if `a == b`; a value less than zero if `a < b`;
+        or a value greater than zero if `a > b`.
+
+        :return: integer value indicating version relationship.
+        """
+
+        if a is None:
+            if b is None:
+                return 0
+            else:
+                return 1
+        elif b is None:
+            return -1
+        elif a == b:
+            return 0
+        elif a < b:
+            return -1
+        else:
+            return 1
 
 
 class Comparable(Protocol):

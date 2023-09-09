@@ -55,6 +55,19 @@ def test_api_version():
         APIVersion.parse("2.2.5beta1")
 
 
+def test_api_version_compare():
+    a = APIVersion(4, 5, 1)
+
+    assert APIVersion.compare(None, None) == 0
+    assert APIVersion.compare(a, a) == 0
+    assert APIVersion.compare(None, a) > 0
+    assert APIVersion.compare(a, None) < 0
+
+    b = APIVersion(4, 6, 1)
+    assert APIVersion.compare(a, b) < 0
+    assert APIVersion.compare(b, a) > 0
+
+
 def test_version_utilities():
     v1 = APIVersion.parse("2.2.0")
 
