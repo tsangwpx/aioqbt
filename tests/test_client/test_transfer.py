@@ -5,7 +5,7 @@ from aioqbt.client import APIClient
 
 
 @pytest.mark.asyncio
-async def test_transfer(client: APIClient):
+async def test_speed_limits_mode(client: APIClient):
     info = await client.transfer.info()
     assert isinstance(info, TransferInfo), info
     assert isinstance(repr(info), str)
@@ -22,9 +22,9 @@ async def test_transfer(client: APIClient):
     await client.transfer.set_speed_limits_mode(slm)
     assert slm == await client.transfer.speed_limits_mode()
 
-    with pytest.raises(ValueError):
-        await client.transfer.set_speed_limits_mode(100)
 
+@pytest.mark.asyncio
+async def test_upload_download_limits(client: APIClient):
     up_limit = 1024 * 3
     dl_limit = 1024 * 2
 

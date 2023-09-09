@@ -2,7 +2,8 @@ from typing import Iterable, Tuple
 
 from aioqbt._paramdict import ParamDict
 from aioqbt.api.types import TransferInfo
-from aioqbt.client import APIGroup, virtual
+from aioqbt.client import APIGroup
+from aioqbt.version import APIVersion
 
 __all__ = ("TransferAPI",)
 
@@ -39,19 +40,37 @@ class TransferAPI(APIGroup):
             "transfer/toggleSpeedLimitsMode",
         )
 
-    @virtual
-    async def set_speed_limits_mode(self, value: int):
+    async def set_speed_limits_mode(self, mode: int):
         """
         Change ``speed_limits_mode``.
 
-        This method is virtual that ``speed_limits_mode`` is queried and
+        If API version is less than v2.8.14, a polyfill is used to set the mode.
+        """
+
+        if APIVersion.compare(self._client().api_version, (2, 8, 14)) < 0:
+            await self._set_speed_limits_mode_polyfill(mode)
+            return
+
+        # since API v2.8.14
+        data = ParamDict()
+        data.required_int("mode", mode)
+
+        await self._request_text(
+            "POST",
+            "transfer/setSpeedLimitsMode",
+            data=data,
+        )
+
+    async def _set_speed_limits_mode_polyfill(self, mode: int):
+        """
+        This is a polyfill that ``speed_limits_mode`` is queried and
         toggled if needed.
         """
-        if value not in (0, 1):
-            raise ValueError(f"Bad speed limits mode: {value!r}")
 
-        mode = await self.speed_limits_mode()
-        if mode != value:
+        new_mode = bool(mode)  # a bool is also an int
+        old_mode = await self.speed_limits_mode()
+
+        if old_mode != new_mode:
             await self.toggle_speed_limits_mode()
 
     async def download_limit(self) -> int:
