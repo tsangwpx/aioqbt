@@ -287,27 +287,40 @@ async def test_save_path(client: APIClient):
 
 @pytest.mark.asyncio
 async def test_rename_file(client: APIClient):
-    assert client.api_version is not None
-
-    if client.api_version < (2, 4, 0):
-        pytest.skip("torrents/rename is available since API v2.4.0")
-
-    if client.api_version >= (2, 7, 0):
-        pytest.skip("rename file is changed after API v2.8.0 or client v4.3.3")
+    if APIVersion.compare(client.api_version, (2, 4, 0)) < 0:
+        pytest.skip("rename_file need API v2.4.0")
 
     sample = make_torrent_files("rename_file")
 
     async with temporary_torrents(client, sample):
         files = await client.torrents.files(sample.hash)
         assert len(files) == 5
-        assert files[3].name == "rename_file/files/03.txt"
+
+        index = 3
+        old_path = PurePath(files[index].name)
+        new_path = old_path.with_name("renamed.txt")
+        assert old_path.as_posix() == "rename_file/files/03.txt"
+
+        if APIVersion.compare(client.api_version, (2, 8, 0)) < 0:
+            # rename_file(hash, index, new_name) if API < v2.8.0
+            await client.torrents.rename_file(
+                sample.hash,
+                index,
+                new_path.name,
+            )
+        else:
+            # rename_file(hash, old_path, new_path) if API >= v2.8.0
+            await client.torrents.rename_file(
+                sample.hash,
+                old_path.as_posix(),
+                new_path.as_posix(),
+            )
 
         @retry_assert
         async def assert_filename():
             files = await client.torrents.files(sample.hash)
-            assert files[3].name == "rename_file/files/rename_file_3"
+            assert files[index].name == new_path.as_posix()
 
-        await client.torrents.rename_file(sample.hash, 3, "rename_file_3")
         await assert_filename()
 
 
