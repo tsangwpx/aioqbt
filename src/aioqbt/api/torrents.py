@@ -393,6 +393,36 @@ class TorrentsAPI(APIGroup):
             data=data,
         )
 
+    async def set_save_path(
+        self,
+        id: InfoHashesOrAll,
+        path: StrPath,
+    ):
+        # since API v2.8.4
+        data = ParamDict.with_hashes_or_all(id, key="id")
+        data.required_path("path", path)
+
+        await self._request_text(
+            "POST",
+            "torrents/setSavePath",
+            data=data,
+        )
+
+    async def set_download_path(
+        self,
+        id: InfoHashesOrAll,
+        path: StrPath,
+    ):
+        # since API v2.8.4
+        data = ParamDict.with_hashes_or_all(id, key="id")
+        data.required_path("path", path)
+
+        await self._request_text(
+            "POST",
+            "torrents/setDownloadPath",
+            data=data,
+        )
+
     async def rename(self, hash: InfoHash, name: str):
         data = ParamDict.with_hash(hash)
         data.required_str("name", name)

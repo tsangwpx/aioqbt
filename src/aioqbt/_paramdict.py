@@ -295,24 +295,60 @@ class ParamDict(MutableMapping[str, str]):
         self._put_list(key, value, sep, param, True, prepare, nonempty)
 
     @classmethod
-    def with_hash(cls, hash: InfoHash):
+    def with_hash(
+        cls,
+        hash: InfoHash,
+        *,
+        key: Optional[str] = None,
+        param: Optional[str] = None,
+    ):
+        if key is None:
+            key = "hash"
+
         res = cls()
-        res.put("hash", hash, prepare=get_info_hash)
+        res.put(key, hash, param=param, prepare=get_info_hash)
         return res
 
     @classmethod
-    def with_hashes(cls, hashes: InfoHashes, *, nonempty: bool = False):
+    def with_hashes(
+        cls,
+        hashes: InfoHashes,
+        *,
+        key: Optional[str] = None,
+        param: Optional[str] = None,
+        nonempty: bool = False,
+    ):
+        if key is None:
+            key = "hashes"
+
         res = cls()
-        res.required_list("hashes", hashes, "|", prepare=get_info_hash, nonempty=nonempty)
+        res.required_list(key, hashes, "|", param=param, prepare=get_info_hash, nonempty=nonempty)
         return res
 
     @classmethod
-    def with_hashes_or_all(cls, hashes: InfoHashesOrAll, nonempty: bool = False):
+    def with_hashes_or_all(
+        cls,
+        hashes: InfoHashesOrAll,
+        *,
+        key: Optional[str] = None,
+        param: Optional[str] = None,
+        nonempty: bool = False,
+    ):
+        if key is None:
+            key = "hashes"
+
         res = cls()
         if hashes == "all":
-            res.put("hashes", "all")
+            res.put(key, "all", param=param)
         else:
-            res.required_list("hashes", hashes, "|", prepare=get_info_hash, nonempty=nonempty)
+            res.required_list(
+                key,
+                hashes,
+                "|",
+                param=param,
+                prepare=get_info_hash,
+                nonempty=nonempty,
+            )
         return res
 
 

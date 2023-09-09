@@ -18,6 +18,7 @@ from aioqbt.api.types import (
     TorrentState,
 )
 from aioqbt.client import APIClient
+from aioqbt.version import APIVersion
 
 
 @pytest.mark.asyncio
@@ -261,6 +262,27 @@ async def test_manipulation(client: APIClient):
         # torrents.recheck
         await client.torrents.recheck(hashes)
         await one_moment()
+
+
+@pytest.mark.asyncio
+async def test_save_path(client: APIClient):
+    if APIVersion.compare(client.api_version, (2, 8, 4)) < 0:
+        pytest.skip("set_save_path/set_download_path need API v2.8.4")
+
+    sample = make_torrent_single("paths")
+    info_hash = sample.hash
+    hashes = (info_hash,)
+
+    async with temporary_torrents(client, sample):
+        # no need to check resultant path. no error is good.
+
+        # torrents.set_location
+        save_path = "paths/save_path"
+        await client.torrents.set_save_path(hashes, save_path)
+
+        # torrents.set_save_path
+        download_path = "paths/download_path"
+        await client.torrents.set_download_path(hashes, download_path)
 
 
 @pytest.mark.asyncio
