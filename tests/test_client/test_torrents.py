@@ -608,3 +608,17 @@ async def test_tags(client: APIClient):
         assert set(tags) == expected_tags
 
         await client.torrents.delete_tags(sorted(expected_tags))
+
+
+@pytest.mark.asyncio
+async def test_export(client: APIClient):
+    if APIVersion.compare(client.api_version, (2, 8, 11)) < 0:
+        pytest.skip("export need API v2.8.11")
+
+    sample = make_torrent_single("export")
+    info_hash = sample.hash
+
+    async with temporary_torrents(client, sample):
+        data = await client.torrents.export(info_hash)
+        assert isinstance(data, bytes)
+        assert b"4:infod" in data

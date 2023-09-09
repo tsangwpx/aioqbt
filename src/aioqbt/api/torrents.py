@@ -685,6 +685,19 @@ class TorrentsAPI(APIGroup):
             data=data,
         )
 
+    async def export(self, hash: InfoHash) -> bytes:
+        # since API v2.8.11
+
+        params = ParamDict.with_hash(hash)
+        resp = await self._client().request(
+            "GET",
+            "torrents/export",
+            params=params,
+        )
+
+        async with resp:
+            return await resp.read()
+
 
 @dataclass
 class AddFormBuilder:
