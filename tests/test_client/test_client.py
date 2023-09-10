@@ -116,7 +116,6 @@ async def test_server_disconnected():
 
 @pytest.mark.asyncio
 async def test_retry_after_header():
-
     max_attempts = 3
     retry_delay = 1 / 1000  # 1 ms
 

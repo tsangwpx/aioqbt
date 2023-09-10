@@ -114,7 +114,7 @@ def server_process(
         bufsize=0,
     )
 
-    def log_stdout_stderr(stdout: bytes, stderr: bytes):
+    def log_stdout_stderr(stdout: Optional[bytes], stderr: Optional[bytes]):
         """Log stdout and stderr"""
         ts = time.time()
 

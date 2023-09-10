@@ -1,6 +1,5 @@
 from enum import Enum
-
-from typing_extensions import NewType
+from typing import NewType
 
 Seconds = NewType("Seconds", int)
 Minutes = NewType("Minutes", int)

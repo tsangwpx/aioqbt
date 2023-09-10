@@ -35,7 +35,7 @@ __all__ = (
 def _check_iterable_except_str(param: str, value: Iterable[Any]):
     """Explicitly reject ``str`` as ``Iterable[str]``"""
     if isinstance(value, str):  # pragma: no cover
-        raise ValueError(f"{param!r} excepts an iterable except str")
+        raise ValueError(f"{param!r} refused str as iterable")
 
 
 class TorrentsAPI(APIGroup):
