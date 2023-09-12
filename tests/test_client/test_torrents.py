@@ -72,7 +72,37 @@ async def test_add(client: APIClient):
     assert save_path_parts_expected == save_path_parts_actual[-len(save_path_parts_expected) :]
     assert abs((info.added_on - now).total_seconds()) <= 10, (info.added_on, now)
 
-    # ratioLimit, seedingTimeLimit requires API v2.8.1
+    await client.torrents.delete((sample.hash,), True)
+
+
+@pytest.mark.asyncio
+async def test_add_share_limits(client: APIClient):
+    if APIVersion.compare(client.api_version, (2, 8, 1)) < 0:
+        pytest.skip("API v2.8.1")
+
+    sample = make_torrent_single("add_share_limits")
+
+    ratio_limit = 2
+    seeding_time_limit = datetime.timedelta(days=2)
+
+    await client.torrents.add(
+        AddFormBuilder.with_client(client)
+        .ratio_limit(ratio_limit)
+        .seeding_time_limit(seeding_time_limit)
+        .include_file(sample.data, f"{sample.name}.torrent")
+        .build()
+    )
+
+    @retry_assert
+    async def assert_share_limits():
+        torrents = await client.torrents.info(hashes=(sample.hash,))
+        assert len(torrents) == 1
+        info = torrents[0]
+
+        assert info.seeding_time_limit == seeding_time_limit
+        assert info.ratio_limit == ratio_limit
+
+    await assert_share_limits()
     await client.torrents.delete((sample.hash,), True)
 
 
