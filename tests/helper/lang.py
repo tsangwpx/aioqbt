@@ -4,7 +4,7 @@ import logging
 import random
 import sys
 import time
-from typing import Awaitable, Callable, Optional
+from typing import Awaitable, Callable, Optional, Tuple, Type, Union
 
 
 async def one_moment(duration: float = 1 / 1000):
@@ -51,9 +51,11 @@ else:
 
 def retry_assert(
     fn=None,
+    *,
     max_attempts: int = 4,
     pause: Optional[float] = None,
     delay: Optional[float] = None,
+    exc_types: Union[Type[BaseException], Tuple[Type[BaseException], ...], None] = None,
     logger: Optional[logging.Logger] = None,
 ):
     """
@@ -63,6 +65,7 @@ def retry_assert(
     :param int max_attempts: maximum number of attempts
     :param float|None delay: initial delay
     :param float|None pause: pause between attempts
+    :param exc_types: exception types to catch. The default value is `AssertionError`
     :param logger: logger to record failed attempt
     """
 
@@ -74,7 +77,8 @@ def retry_assert(
             retry_assert,
             pause=pause,
             delay=delay,
-            max_attemps=max_attempts,
+            max_attempts=max_attempts,
+            exc_types=exc_types,
             logger=logger,
         )
 
@@ -84,7 +88,8 @@ def retry_assert(
     if delay is None:
         delay = 0
 
-    exc_classes = (AssertionError,)
+    if exc_types is None:
+        exc_types = AssertionError
 
     @functools.wraps(fn)
     async def wrapper(*args, **kwargs):
@@ -98,10 +103,7 @@ def retry_assert(
         for count in range(1, max_attempts + 1):
             try:
                 return await fn(*args, **kwargs)
-            except BaseException as ex:
-                if not isinstance(ex, exc_classes):
-                    raise
-
+            except exc_types as ex:
                 last_exception = ex
 
                 if logger is not None:
