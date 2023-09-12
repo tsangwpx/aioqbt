@@ -1,15 +1,17 @@
 import copy
 import datetime
 from pathlib import PurePath
+from typing import Callable
 
 import pytest
 from helper.lang import one_moment, retry_assert
-from helper.torrent import make_torrent_files, make_torrent_single, temporary_torrents
+from helper.torrent import TorrentData, make_torrent_files, make_torrent_single, temporary_torrents
 
 from aioqbt import exc
 from aioqbt.api import AddFormBuilder
 from aioqbt.api.types import (
     Category,
+    ContentLayout,
     FilePriority,
     InfoFilter,
     PieceState,
@@ -104,6 +106,43 @@ async def test_add_share_limits(client: APIClient):
 
     await assert_share_limits()
     await client.torrents.delete((sample.hash,), True)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "name,layout,make_torrent,parts_count",
+    (
+        ("subfolder_single", ContentLayout.SUBFOLDER, make_torrent_single, 2),
+        ("nosubfolder_multiple", ContentLayout.NO_SUBFOLDER, make_torrent_files, 2),
+    ),
+)
+async def test_add_content_layout(
+    client: APIClient,
+    name: str,
+    layout: ContentLayout,
+    make_torrent: Callable[[str], TorrentData],
+    parts_count: str,
+):
+    if APIVersion.compare(client.api_version, (2, 7, 0)) < 0:
+        pytest.skip("API v2.7.0")
+
+    sample = make_torrent(f"add_content_layout_{name!s}")
+
+    await client.torrents.add(
+        AddFormBuilder.with_client(client)
+        .content_layout(layout)
+        .include_file(sample.data, f"{sample.name}.torrent")
+        .build()
+    )
+
+    @retry_assert(exc_types=exc.NotFoundError)
+    async def get_files():
+        return await client.torrents.files(hash=sample.hash)
+
+    files = await get_files()
+    path = PurePath(files[0].name)
+    assert len(path.parts) == parts_count, path
+    await client.torrents.delete((sample.hash,), delete_files=True)
 
 
 @pytest.mark.asyncio

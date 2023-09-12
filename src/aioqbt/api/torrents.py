@@ -11,6 +11,7 @@ from aioqbt._decorator import copy_self
 from aioqbt._paramdict import ParamDict
 from aioqbt.api.types import (
     Category,
+    ContentLayout,
     FileEntry,
     InfoFilter,
     RatioLimitTypes,
@@ -729,6 +730,7 @@ class AddFormBuilder:
     _auto_tmm: Optional[bool] = None
     _sequential_download: Optional[bool] = None
     _first_last_piece_prio: Optional[bool] = None
+    _content_layout: Optional[str] = None
 
     def __deepcopy__(self, memodict=None):
         return dataclasses.replace(
@@ -881,6 +883,13 @@ class AddFormBuilder:
         self._first_last_piece_prio = first_last_piece_prio
         return self
 
+    @copy_self
+    def content_layout(self, content_layout: ContentLayout):
+        """Set ``contentLayout```"""
+        # API v2.7.0
+        self._content_layout = str(content_layout)
+        return self
+
     def build(self) -> aiohttp.FormData:
         """
         Build :class:`aiohttp.FormData`.
@@ -946,6 +955,9 @@ class AddFormBuilder:
 
         if self._first_last_piece_prio is not None:
             form.add_field("firstLastPiecePrio", bool_str(self._first_last_piece_prio))
+
+        if self._content_layout is not None:
+            form.add_field("contentLayout", self._content_layout)
 
         return form
 

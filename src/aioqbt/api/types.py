@@ -110,6 +110,16 @@ class SeedingTimeLimits(IntEnum):
 SeedingTimeLimitTypes = Union[timedelta, Minutes, SeedingTimeLimits]
 
 
+class ContentLayout(StrEnum):
+    """
+    Content layout that torrent files are organized
+    """
+
+    ORIGINAL = "Original"
+    SUBFOLDER = "Subfolder"
+    NO_SUBFOLDER = "NoSubfolder"
+
+
 class FilePriority(IntEnum):
     """
     File priority to compare with :attr:`.FileEntry.priority`.
