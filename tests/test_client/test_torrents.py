@@ -146,6 +146,34 @@ async def test_add_content_layout(
 
 
 @pytest.mark.asyncio
+async def test_add_download_path(client: APIClient):
+    if APIVersion.compare(client.api_version, (2, 8, 4)) < 0:
+        pytest.skip("API v2.8.4")
+
+    sample = make_torrent_single("add_download_path")
+    pathname = "apple"
+
+    await client.torrents.add(
+        AddFormBuilder.with_client(client)
+        .download_path(pathname)
+        .use_download_path(True)
+        .include_file(sample.data, f"{sample.name}.torrent")
+        .build()
+    )
+
+    @retry_assert
+    async def assert_download_path():
+        torrents = await client.torrents.info(hashes=(sample.hash,))
+        assert len(torrents) == 1
+        info = torrents[0]
+
+        assert hasattr(info, "download_path")
+        assert PurePath(info.download_path).name == pathname, info.download_path
+
+    await assert_download_path()
+
+
+@pytest.mark.asyncio
 async def test_add_mixed(client: APIClient):
     """Add torrents with mixed of data and urls"""
     sample_data1 = make_torrent_single("add_mixed_data1")

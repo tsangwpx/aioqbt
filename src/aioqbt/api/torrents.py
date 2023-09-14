@@ -716,6 +716,8 @@ class AddFormBuilder:
     _files: List[Tuple[bytes, str]] = field(default_factory=list)
 
     _savepath: Optional[str] = None
+    _download_path: Optional[str] = None
+    _use_download_path: Optional[bool] = None
     _cookie: Optional[str] = None
     _category: Optional[str] = None
     _tags: Optional[str] = None
@@ -774,6 +776,26 @@ class AddFormBuilder:
     def savepath(self, savepath: StrPath):
         """Set ``savepath``"""
         self._savepath = _convert_path(savepath)
+        return self
+
+    @copy_self
+    def download_path(self, download_path: StrPath):
+        """
+        Set ``downloadPath``
+
+        Also use ``use_download_path(True)`` to enable download path.
+        """
+        # API v2.8.4
+        self._download_path = _convert_path(download_path)
+        return self
+
+    @copy_self
+    def use_download_path(self, use_download_path: bool):
+        """
+        Set ``useDownloadPath``
+        """
+        # API v2.8.4
+        self._use_download_path = use_download_path
         return self
 
     @copy_self
@@ -916,6 +938,12 @@ class AddFormBuilder:
 
         if self._savepath is not None:
             form.add_field("savepath", self._savepath)
+
+        if self._download_path is not None:
+            form.add_field("downloadPath", self._download_path)
+
+        if self._use_download_path is not None:
+            form.add_field("useDownloadPath", bool_str(self._use_download_path))
 
         if self._cookie is not None:
             form.add_field("cookie", self._cookie)
