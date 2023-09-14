@@ -234,6 +234,7 @@ class TorrentInfo:
     ratio: float
     ratio_limit: float
     save_path: str
+    download_path: str  # v2.8.4
     # seeding_time: int = field(
     #     metadata={
     #         "convert": DurationConverter(TimeUnit.SECONDS),
@@ -290,6 +291,7 @@ class TorrentProperties:
     """
 
     save_path: str
+    download_path: str  # v2.8.4
     creation_date: Optional[datetime] = field(
         metadata={
             "convert": DateTimeConverter(_DATETIME_NONE_TABLE),
