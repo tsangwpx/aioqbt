@@ -110,6 +110,16 @@ class SeedingTimeLimits(IntEnum):
 SeedingTimeLimitTypes = Union[timedelta, Minutes, SeedingTimeLimits]
 
 
+class StopCondition(StrEnum):
+    """
+    Stop torrent when condition is fulfilled.
+    """
+
+    NONE = "None"
+    METADATA_RECEIVED = "MetadataReceived"
+    FILES_CHECKED = "FilesChecked"
+
+
 class ContentLayout(StrEnum):
     """
     Content layout that torrent files are organized

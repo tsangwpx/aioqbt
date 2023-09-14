@@ -16,6 +16,7 @@ from aioqbt.api.types import (
     InfoFilter,
     RatioLimitTypes,
     SeedingTimeLimitTypes,
+    StopCondition,
     TorrentInfo,
     TorrentProperties,
     Tracker,
@@ -732,6 +733,7 @@ class AddFormBuilder:
     _auto_tmm: Optional[bool] = None
     _sequential_download: Optional[bool] = None
     _first_last_piece_prio: Optional[bool] = None
+    _stop_condition: Optional[str] = None
     _content_layout: Optional[str] = None
 
     def __deepcopy__(self, memodict=None):
@@ -906,6 +908,13 @@ class AddFormBuilder:
         return self
 
     @copy_self
+    def stop_condition(self, stop_condition: StopCondition):
+        """Set ``stopCondition``"""
+        # API v2.8.15
+        self._stop_condition = str(stop_condition)
+        return self
+
+    @copy_self
     def content_layout(self, content_layout: ContentLayout):
         """Set ``contentLayout```"""
         # API v2.7.0
@@ -983,6 +992,9 @@ class AddFormBuilder:
 
         if self._first_last_piece_prio is not None:
             form.add_field("firstLastPiecePrio", bool_str(self._first_last_piece_prio))
+
+        if self._stop_condition is not None:
+            form.add_field("stopCondition", self._stop_condition)
 
         if self._content_layout is not None:
             form.add_field("contentLayout", self._content_layout)

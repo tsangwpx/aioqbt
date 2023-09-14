@@ -15,6 +15,7 @@ from aioqbt.api.types import (
     FilePriority,
     InfoFilter,
     PieceState,
+    StopCondition,
     TorrentInfo,
     TorrentProperties,
     TorrentState,
@@ -106,6 +107,51 @@ async def test_add_share_limits(client: APIClient):
 
     await assert_share_limits()
     await client.torrents.delete((sample.hash,), True)
+
+
+@pytest.mark.asyncio
+async def test_add_stop_condition(client: APIClient):
+    if APIVersion.compare(client.api_version, (2, 8, 15)) < 0:
+        pytest.skip("API v2.8.15")
+
+    sample = make_torrent_single("add_stop_condition_sample")
+
+    await client.torrents.add(
+        AddFormBuilder.with_client(client)
+        .stop_condition(StopCondition.METADATA_RECEIVED)
+        .include_url(sample.magnet)
+        .build()
+    )
+
+    @retry_assert
+    async def assert_no_metadata():
+        torrents = await client.torrents.info(hashes=(sample.hash,))
+        assert len(torrents) == 1
+        info = torrents[0]
+        assert info.state == TorrentState.META_DL, info.state
+
+    await assert_no_metadata()
+
+    try:
+        await client.torrents.add(
+            AddFormBuilder.with_client(client)
+            .stop_condition(StopCondition.METADATA_RECEIVED)
+            .include_file(sample.data, f"{sample.name}.torrent")
+            .build()
+        )
+    except exc.AddTorrentError:
+        # As of v4.5.2, "torrents/add" fails if torrent is already added
+        # However, metadata is merged if available.
+        pass
+
+    @retry_assert
+    async def assert_state():
+        torrents = await client.torrents.info(hashes=(sample.hash,))
+        assert len(torrents) == 1
+        info = torrents[0]
+        assert info.state in {TorrentState.CHECKING_RESUME_DATA, TorrentState.PAUSED_DL}
+
+    await assert_state()
 
 
 @pytest.mark.asyncio
