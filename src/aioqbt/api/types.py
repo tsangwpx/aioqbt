@@ -200,58 +200,72 @@ class TorrentInfo:
     """
 
     hash: str
+    infohash_v1: str  # API v2.8.4
+    infohash_v2: str  # API v2.8.4
     name: str
+    magnet_uri: str
+    size: int
+    progress: float
+    dlspeed: int
+    upspeed: int
+    priority: int
+    num_seeds: int
+    num_complete: int
+    num_leechs: int
+    num_incomplete: int
+
+    state: TorrentState = field(
+        metadata={
+            "convert": EnumConverter(TorrentState),
+        }
+    )
+    eta: timedelta = field(
+        metadata={
+            "convert": DurationConverter(TimeUnit.SECONDS),
+        }
+    )
+    seq_dl: bool
+    f_l_piece_prio: bool
+
+    category: str
+    tags: List[str] = field(
+        metadata={
+            "convert": ScalarListConverter(","),
+        }
+    )
+    super_seeding: bool
+    force_start: bool
+    save_path: str
+    download_path: str  # API v2.8.4
+    content_path: str  # API v2.6.1
     added_on: datetime = field(
         metadata={
             "convert": DateTimeConverter(),  # unix timestamp
         }
     )
-    amount_left: int
-    auto_tmm: bool
-    category: str
-    completed: int
     completion_on: datetime = field(
         metadata={
             "convert": DateTimeConverter(),  # unix timestamp
         }
     )
+    tracker: str
+    trackers_count: int
     dl_limit: int
-    dlspeed: int
+    up_limit: int
     downloaded: int
+    uploaded: int
     downloaded_session: int
-    eta: timedelta
-    f_l_piece_prio: bool
-    force_start: bool
-    last_activity: datetime = field(
-        metadata={
-            "convert": DateTimeConverter(),
-        }
-    )
-    magnet_uri: str
+    uploaded_session: int
+    amount_left: int
+    completed: int
     max_ratio: float
-    # max_seeding_time is readonly
     max_seeding_time: Optional[timedelta] = field(
         metadata={
             "convert": DurationConverter(TimeUnit.MINUTES, _DURATION_NONE_TABLE),
         }
     )
-    num_complete: int
-    num_incomplete: int
-    num_leechs: int
-    num_seeds: int
-    priority: int
-    progress: float
     ratio: float
     ratio_limit: float
-    save_path: str
-    download_path: str  # v2.8.4
-    # seeding_time: int = field(
-    #     metadata={
-    #         "convert": DurationConverter(TimeUnit.SECONDS),
-    #         "since": (2, 8, 1),
-    #     }
-    # )
-    # seeding_time_limit is a setting, readwrite
     seeding_time_limit: SeedingTimeLimitTypes = field(
         metadata={
             "convert": DurationConverter(TimeUnit.MINUTES, _table_from_enum(SeedingTimeLimits)),
@@ -262,33 +276,25 @@ class TorrentInfo:
             "convert": DateTimeConverter(),
         }
     )
-    seq_dl: bool
-    size: int
-    state: TorrentState = field(
-        metadata={
-            "convert": EnumConverter(TorrentState),
-        }
-    )
-    super_seeding: bool
-    tags: List[str] = field(
-        metadata={
-            "convert": ScalarListConverter(","),
-        }
-    )
+    auto_tmm: bool
     time_active: timedelta = field(
         metadata={
             "convert": DurationConverter(TimeUnit.SECONDS),
         }
     )
-    total_size: int
-    tracker: str
-    up_limit: int
-    uploaded: int
-    uploaded_session: int
-    upspeed: int
-
+    seeding_time: timedelta = field(
+        metadata={
+            "convert": DurationConverter(TimeUnit.SECONDS),
+        }
+    )
+    last_activity: datetime = field(
+        metadata={
+            "convert": DateTimeConverter(),
+        }
+    )
     availability: float
-    content_path: Optional[str]  # since 2.6.1
+
+    total_size: int
 
     def __repr__(self):
         return f"<{type(self).__name__} {self.hash} {self.state.value} {self.name!r}>"
@@ -300,23 +306,11 @@ class TorrentProperties:
     See :meth:`.TorrentsAPI.properties`.
     """
 
-    save_path: str
-    download_path: str  # v2.8.4
-    creation_date: Optional[datetime] = field(
-        metadata={
-            "convert": DateTimeConverter(_DATETIME_NONE_TABLE),
-        }
-    )
-    piece_size: int
-    comment: str
-    total_wasted: int
-    total_uploaded: int
-    total_uploaded_session: int
-    total_downloaded: int
-    total_downloaded_session: int
-    up_limit: int
-    dl_limit: int
-    # same as .TorrentInfo.active_time
+    infohash_v1: str  # API v2.8.3
+    infohash_v2: str  # API v2.8.3
+    name: str  # API v2.8.19
+    hash: str  # API v2.8.19
+
     time_elapsed: timedelta = field(
         metadata={
             "convert": DurationConverter(TimeUnit.SECONDS),
@@ -327,12 +321,49 @@ class TorrentProperties:
             "convert": DurationConverter(TimeUnit.MINUTES),
         }
     )
+    eta: timedelta = field(
+        metadata={
+            "convert": DurationConverter(TimeUnit.SECONDS),
+        }
+    )
     nb_connections: int
     nb_connections_limit: int
+    total_downloaded: int
+    total_downloaded_session: int
+    total_uploaded: int
+    total_uploaded_session: int
+    dl_speed: int
+    dl_speed_avg: int
+    up_speed: int
+    up_speed_avg: int
+    dl_limit: int
+    up_limit: int
+    total_wasted: int
+    seeds: int
+    seeds_total: int
+    peers: int
+    peers_total: int
     share_ratio: float
+    reannounce: timedelta = field(
+        metadata={
+            "convert": DurationConverter(TimeUnit.SECONDS),
+        }
+    )
+    total_size: int
+    pieces_num: int
+    piece_size: int
+    pieces_have: int
+    created_by: str
+    is_private: bool  # v2.8.20
     addition_date: datetime = field(
         metadata={
             "convert": DateTimeConverter(),
+        }
+    )
+
+    last_seen: Optional[datetime] = field(
+        metadata={
+            "convert": DateTimeConverter(_DATETIME_NONE_TABLE),
         }
     )
     completion_date: Optional[datetime] = field(
@@ -340,29 +371,15 @@ class TorrentProperties:
             "convert": DateTimeConverter(_DATETIME_NONE_TABLE),
         }
     )
-    created_by: str
-    dl_speed_avg: int
-    dl_speed: int
-    # eta: timedelta
-    last_seen: Optional[datetime] = field(
+    creation_date: Optional[datetime] = field(
         metadata={
             "convert": DateTimeConverter(_DATETIME_NONE_TABLE),
         }
     )
-    peers: int
-    peers_total: int
-    pieces_have: int
-    pieces_num: int
-    reannounce: timedelta = field(
-        metadata={
-            "convert": DurationConverter(TimeUnit.SECONDS),
-        }
-    )
-    seeds: int
-    seeds_total: int
-    total_size: int
-    up_speed_avg: int
-    up_speed: int
+
+    save_path: str
+    download_path: str  # v2.8.4
+    comment: str
 
     # hash is set by client to improve __repr__() only
     _hash: Optional[str] = field(default=None)
