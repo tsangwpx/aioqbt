@@ -304,6 +304,7 @@ async def test_torrent_metadata(client: APIClient):
             # torrents.properties()
             props = await client.torrents.properties(info_hash)
             assert isinstance(props, TorrentProperties)
+            assert props.hash, f"hash={getattr(props, 'hash', None)!r}"
             assert isinstance(repr(props), str)
             assert abs((props.addition_date - now).total_seconds()) <= 10
 

@@ -94,7 +94,10 @@ class TorrentsAPI(APIGroup):
             "torrents/properties",
             params=ParamDict.with_hash(hash),
         )
-        props._hash = get_info_hash(hash)
+
+        if not hasattr(props, "hash"):
+            props.hash = get_info_hash(hash)
+
         return props
 
     async def trackers(self, hash: InfoHash) -> List[Tracker]:

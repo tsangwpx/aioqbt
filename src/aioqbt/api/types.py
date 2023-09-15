@@ -381,21 +381,16 @@ class TorrentProperties:
     download_path: str  # v2.8.4
     comment: str
 
-    # hash is set by client to improve __repr__() only
-    _hash: Optional[str] = field(default=None)
-
     def __repr__(self):
         cls_name = type(self).__name__
 
-        try:
-            h = self._hash
-        except AttributeError:
-            h = None
+        name = getattr(self, "name", None)
+        hash = getattr(self, "hash", None)
 
-        if h is None:
-            return f"<{cls_name} at {hex(id(self))}>"
+        if name is None and hash is None:
+            return f"<{cls_name} at 0x{hex(id(self))}>"
         else:
-            return f"<{cls_name} {h}>"
+            return f"<{cls_name} hash={hash!s} name={name!r}>"
 
 
 @dataclass
