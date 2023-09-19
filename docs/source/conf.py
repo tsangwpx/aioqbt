@@ -43,13 +43,17 @@ intersphinx_mapping = {
     "aiohttp": ("https://docs.aiohttp.org/en/stable/", None),
 }
 
+# -- Options for Python ------------------------------------------------------
+python_display_short_literal_types = False
+
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
 html_theme_options = {
-    "style_external_links": True,
+    "style_external_links": False,
+    "navigation_depth": 4,
 }
 html_context = {
     "display_github": True,

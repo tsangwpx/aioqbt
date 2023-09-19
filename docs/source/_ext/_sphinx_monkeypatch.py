@@ -1,7 +1,7 @@
 import functools
 import itertools
 from collections import defaultdict
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Literal, Optional, Tuple, Union
 
 from docutils.nodes import Element
 from sphinx.addnodes import pending_xref
@@ -14,9 +14,9 @@ from aioqbt.bittorrent import InfoHash, InfoHashes, InfoHashesOrAll
 
 @functools.cache
 def stringify_annotation(anno: Any, mode: str) -> str:
-    from sphinx.util.typing import stringify
+    from sphinx.util.typing import stringify_annotation
 
-    return stringify(anno, mode)
+    return stringify_annotation(anno, mode)
 
 
 class ReplacementAnnotations:
@@ -30,7 +30,7 @@ class ReplacementAnnotations:
         """
         :param mode: stringify() mode
         """
-        assert mode in {"smart", "fully-qualified"}, mode
+        assert mode in {"smart", "fully-qualified", "fully-qualified-except-typing"}, mode
         self._mode = mode
 
         # param -> (qualname prefix, target, replacement)
@@ -101,16 +101,21 @@ def _builder_inited(app: Sphinx):
 
     ra = ReplacementAnnotations(mode)
 
-    qn_info_hash = f"{tilde}aioqbt.bittorrent.InfoHash"
-    qn_ihs = f"{tilde}aioqbt.bittorrent.InfoHashes"
-    qn_ihs_all = f"{tilde}aioqbt.bittorrent.InfoHashesOrAll"
+    qn_hash = f"{tilde}aioqbt.bittorrent.InfoHash"
+    qn_hashes = Iterable[qn_hash]
+    qn_hashes_all = Union[qn_hashes, Literal["all"]]
 
-    ra.add_rule("aioqbt", "hash", InfoHash, qn_info_hash)
-    ra.add_rule("aioqbt", "hash", Optional[InfoHash], Optional[qn_info_hash])
-    ra.add_rule("aioqbt", "hashes", InfoHashes, qn_ihs)
-    ra.add_rule("aioqbt", "hashes", Optional[InfoHashes], Optional[qn_ihs])
-    ra.add_rule("aioqbt", "hashes", InfoHashesOrAll, qn_ihs_all)
-    ra.add_rule("aioqbt", "hashes", Optional[InfoHashesOrAll], Optional[qn_ihs_all])
+    table = [
+        ("aioqbt", "hash", InfoHash, qn_hash),
+        ("aioqbt", "hashes", InfoHashes, qn_hashes),
+        ("aioqbt", "hashes", InfoHashesOrAll, qn_hashes_all),
+        ("aioqbt", "id", InfoHashes, qn_hashes),
+        ("aioqbt", "id", InfoHashesOrAll, qn_hashes_all),
+    ]
+
+    for package, param, target, repl in table:
+        ra.add_rule(package, param, target, repl)
+        ra.add_rule(package, param, Optional[target], Optional[repl])
 
     app.env._monkeypatch_repl_annos = ra
 
@@ -124,7 +129,11 @@ def _process_signature(
     signature: Optional[str],
     return_annotation: Optional[str],
 ):
-    if signature is None:
+    if what not in {"function", "method"}:
+        return
+
+    if signature in (None, "", "()") and return_annotation in (None, ""):
+        # trivial
         return
 
     ra: ReplacementAnnotations = app.env._monkeypatch_repl_annos
