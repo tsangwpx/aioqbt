@@ -1,8 +1,8 @@
 import json
-from typing import Any, List, Mapping, Optional
+from typing import List, Mapping, Optional
 
 from aioqbt._paramdict import ParamDict
-from aioqbt.api.types import BuildInfo, NetworkInterface
+from aioqbt.api.types import BuildInfo, NetworkInterface, Preferences
 from aioqbt.client import APIGroup
 from aioqbt.version import version_check
 
@@ -41,20 +41,28 @@ class AppAPI(APIGroup):
             "app/shutdown",
         )
 
-    # Under construction
-    # async def preferences(self) -> Dict[str, Any]:
-    #     return await self._request_json(
-    #         "GET",
-    #         "app/preferences",
-    #     )
+    async def preferences(self) -> Preferences:
+        """Get application preferences."""
+        return await self._request_json(
+            "GET",
+            "app/preferences",
+        )
 
-    async def set_preferences(self, prefs: Mapping[str, Any]):
+    async def set_preferences(self, prefs: Mapping[str, object]):
         """
+        Set application preferences.
+
         :param prefs: a mapping of preferences to update.
         """
         prefs = dict(prefs)
+        # plus sign (+) were not decoded as space in v4.1.5 or earlier.
+        # JSON.dumps() are invalid with default separators argument.
+        # Removing spaces in separators allows parsing JSON correctly
+        # though plus signs are still not decoded as spaces.
+        # This should behave similarly to WebUI.
+        # https://github.com/qbittorrent/qBittorrent/issues/10451
         data = {
-            "json": json.dumps(prefs),
+            "json": json.dumps(prefs, separators=(",", ":")),
         }
 
         await self._request_text(

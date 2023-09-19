@@ -183,6 +183,243 @@ class BuildInfo:
     bitness: int
 
 
+class Preferences(TypedDict, total=False):
+    """
+    Dict of preferences.
+
+    .. note::
+
+        Preference keys may be added/changed/removed across versions.
+        Please refer to :APIWiki:`the documentation <#get-application-preferences>`.
+
+    """
+
+    locale: str
+    performance_warning: bool
+
+    file_log_enabled: bool
+    file_log_path: str
+    file_log_backup_enabled: bool
+    file_log_max_size: int
+    file_log_delete_old: bool
+    file_log_age: int
+    file_log_age_type: str
+
+    torrent_content_layout: str
+    add_to_top_of_queue: bool
+    create_subfolder_enabled: bool  # removed in v4.3.2
+    start_paused_enabled: bool
+    torrent_stop_condition: str
+    merge_trackers: bool
+    auto_delete_mode: int
+    preallocate_all: bool
+    incomplete_files_ext: bool
+
+    auto_tmm_enabled: bool
+    torrent_changed_tmm_enabled: bool
+    save_path_changed_tmm_enabled: bool
+    category_changed_tmm_enabled: bool
+    use_subcategories: bool
+    save_path: str
+    temp_path_enabled: bool
+    temp_path: str
+    use_category_paths_in_manual_mode: bool
+    export_dir: str
+    export_dir_fin: str
+
+    scan_dirs: Dict[str, Union[int, str]]
+
+    excluded_file_names_enabled: bool
+    excluded_file_names: str
+
+    mail_notification_enabled: bool
+    mail_notification_sender: str
+    mail_notification_email: str
+    mail_notification_smtp: str
+    mail_notification_ssl_enabled: bool
+    mail_notification_auth_enabled: bool
+    mail_notification_username: str
+    mail_notification_password: str
+
+    autorun_on_torrent_added_enabled: bool
+    autorun_on_torrent_added_program: str
+
+    autorun_enabled: bool
+    autorun_program: str
+
+    listen_port: int
+    random_port: bool
+    upnp: bool
+
+    max_connec: int
+    max_connec_per_torrent: int
+    max_uploads: int
+    max_uploads_per_torrent: int
+
+    proxy_type: int
+    proxy_ip: str
+    proxy_port: int
+    proxy_auth_enabled: bool
+    proxy_username: str
+    proxy_password: str
+    proxy_hostname_lookup: bool
+    proxy_torrents_only: bool
+    proxy_peer_connections: bool
+
+    ip_filter_enabled: bool
+    ip_filter_path: str
+    ip_filter_trackers: bool
+    banned_IPs: str
+
+    dl_limit: int
+    up_limit: int
+    alt_dl_limit: int
+    alt_up_limit: int
+    bittorrent_protocol: int
+    limit_utp_rate: bool
+    limit_tcp_overhead: bool
+    limit_lan_peers: bool
+
+    scheduler_enabled: bool
+    schedule_from_hour: int
+    schedule_from_min: int
+    schedule_to_hour: int
+    schedule_to_min: int
+    scheduler_days: int
+
+    dht: bool
+    pex: bool
+    lsd: bool
+    encryption: int
+    anonymous_mode: bool
+
+    max_active_checking_torrents: int
+
+    queueing_enabled: bool
+    max_active_downloads: int
+    max_active_torrents: int
+    max_active_uploads: int
+    dont_count_slow_torrents: bool
+    slow_torrent_dl_rate_threshold: int
+    slow_torrent_ul_rate_threshold: int
+    slow_torrent_inactive_timer: int
+
+    max_ratio_enabled: bool
+    max_ratio: int
+    max_seeding_time_enabled: bool
+    max_seeding_time: int
+    max_ratio_act: int
+
+    add_trackers_enabled: bool
+    add_trackers: str
+
+    web_ui_domain_list: str
+    web_ui_address: str
+    web_ui_port: int
+    web_ui_upnp: bool
+    use_https: bool
+    web_ui_https_cert_path: str
+    web_ui_https_key_path: str
+
+    web_ui_username: str
+    bypass_local_auth: bool
+    bypass_auth_subnet_whitelist_enabled: bool
+    bypass_auth_subnet_whitelist: str
+    web_ui_max_auth_fail_count: int
+    web_ui_ban_duration: int
+    web_ui_session_timeout: int
+
+    alternative_webui_enabled: bool
+    alternative_webui_path: str
+
+    web_ui_clickjacking_protection_enabled: bool
+    web_ui_csrf_protection_enabled: bool
+    web_ui_secure_cookie_enabled: bool
+    web_ui_host_header_validation_enabled: bool
+
+    web_ui_use_custom_http_headers_enabled: bool
+    web_ui_custom_http_headers: str
+
+    web_ui_reverse_proxy_enabled: bool
+    web_ui_reverse_proxies_list: str
+
+    dyndns_enabled: bool
+    dyndns_service: int
+    dyndns_username: str
+    dyndns_password: str
+    dyndns_domain: str
+
+    # rss
+    rss_refresh_interval: int
+    rss_max_articles_per_feed: int
+    rss_processing_enabled: bool
+    rss_auto_downloading_enabled: bool
+    rss_download_repack_proper_episodes: bool
+    rss_smart_episode_filters: str
+
+    # advanced
+    resume_data_storage_type: str
+    memory_working_set_limit: int
+    current_network_interface: str
+    current_interface_address: str
+    save_resume_data_interval: int
+    recheck_completed_torrents: bool
+    refresh_interval: int
+    resolve_peer_countries: bool
+    reannounce_when_address_changed: bool
+
+    # libtorrent
+    async_io_threads: int
+    hashing_threads: int
+    file_pool_size: int
+    checking_memory_use: int
+    disk_cache: int
+    disk_cache_ttl: int
+    disk_queue_size: int
+    disk_io_type: int
+    disk_io_read_mode: int
+    disk_io_write_mode: int
+    enable_os_cache: bool  # removed
+    enable_coalesce_read_write: bool
+    enable_piece_extent_affinity: bool
+    enable_upload_suggestions: bool
+    send_buffer_watermark: int
+    send_buffer_low_watermark: int
+    send_buffer_watermark_factor: int
+    connection_speed: int
+    socket_backlog_size: int
+    outgoing_ports_min: int
+    outgoing_ports_max: int
+    upnp_lease_duration: int
+    peer_tos: int
+    utp_tcp_mixed_mode: int
+    idn_support_enabled: bool
+    enable_multi_connections_from_same_ip: bool
+    validate_https_tracker_certificate: bool
+    ssrf_mitigation: bool
+    block_peers_on_privileged_ports: bool
+    enable_embedded_tracker: bool
+    embedded_tracker_port: int
+    embedded_tracker_port_forwarding: bool
+    upload_slots_behavior: int
+    upload_choking_algorithm: int
+    announce_to_all_trackers: bool
+    announce_to_all_tiers: bool
+    announce_ip: str
+    max_concurrent_http_announces: int
+    stop_tracker_timeout: int
+    peer_turnover: int
+    peer_turnover_cutoff: int
+    peer_turnover_interval: int
+    request_queue_size: int
+
+    # removed keys
+    force_proxy: bool
+    ssl_cert: str
+    ssl_key: str
+    web_ui_password: str
+
+
 @dataclass
 class NetworkInterface:
     """
