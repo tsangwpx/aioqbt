@@ -1,8 +1,8 @@
 .. _usage:
 
-=====
-Usage
-=====
+============
+Basic usage
+============
 
 .. _installation:
 
@@ -15,17 +15,24 @@ To use ``aioqbt``, first install it using pip:
 
     $ pip install aioqbt
 
-Creating clients
+Create client
 ----------------
 
-To create :class:`~aioqbt.client.APIClient`,
-use :func:`~aioqbt.client.create_client()` with login credentials:
+:class:`~aioqbt.client.APIClient` exposes Python interfaces to qBittorrent WebUI APIs
+and maintains login session.
+It is recommended to create them with :func:`~aioqbt.client.create_client()`
+by supplying URL and login credential.
+The interactions with the client are placed inside ``async with client`` block.
+
+Let's create a client and inquire qBittorrent versions.
 
 .. code-block:: python
 
+    import asyncio
+
     from aioqbt.client import create_client
 
-    async def run():
+    async def main():
         client = await create_client(
             "http://localhost:8080/api/v2/",
             username="admin",
@@ -36,108 +43,151 @@ use :func:`~aioqbt.client.create_client()` with login credentials:
             print("Version", await client.app.version())
             print("API", await client.app.webapi_version())
 
-    if __name__ == "__main__":
-        asyncio.run(run())
+    asyncio.run(main())
 
 Output:
 
 .. code-block:: text
 
-    Version v4.2.5
-    API 2.5.1
+    Version v4.5.5
+    API 2.8.19
 
-
-Add & list torrents
+Add torrents
 -------------------
 
-To add torrents,
+Here are the steps to add torrents:
 
-    1. Obtain a builder with
-       :meth:`AddFormBuilder.with_client(client) <.AddFormBuilder.with_client>`.
-    2. Include torrent files and/or URLs.
-    3. Build a form with :meth:`builder.build() <.AddFormBuilder.build>`, and pass it to
-       :meth:`client.torrents.add() <.TorrentsAPI.add>`.
+    1. Create a builder with :meth:`AddFormBuilder.with_client(client) <.AddFormBuilder.with_client>`.
+       It is a helper to build :class:`~aiohttp.FormData` for submission.
+    2. Include torrent files :meth:`~.AddFormBuilder.include_file` or URLs :meth:`~.AddFormBuilder.include_url`.
+    3. Call :meth:`builder.build() <.AddFormBuilder.build>`, and
+       pass the result to :meth:`client.torrents.add() <.TorrentsAPI.add>`.
 
-To get torrents, use :meth:`client.torrents.info() <.TorrentsAPI.info>` to obtain
-a list of :class:`.TorrentInfo`.
-
-Here is the code snippet:
+and the code follows:
 
 .. code-block:: python
 
     from aioqbt.api import AddFormBuilder
 
-    async def task(client: "aioqbt.client.APIClient"):
-        # Add debian-11.5.0-amd64-netinst.iso by SHA-1 hash
-        await client.torrents.add(
-            AddFormBuilder.with_client(client)
-            .include_url("d55be2cd263efa84aeb9495333a4fabc428a4250")
-            .build()
+    # Add ubuntu-22.04.3-desktop-amd64.iso
+    url = "https://releases.ubuntu.com/22.04/ubuntu-22.04.3-desktop-amd64.iso.torrent"
+    await client.torrents.add(
+        AddFormBuilder.with_client(client)
+        .include_url(url)
+        .build()
+    )
+
+
+Get torrents
+-------------------
+
+To list the torrent we just added, use :meth:`client.torrents.info() <.TorrentsAPI.info>` to obtain
+a list of :class:`.TorrentInfo`,
+which encapsulates torrent info like name, state, and info hash::
+
+    torrents = await client.torrents.info()
+    for info in torrents:
+        print(info)
+
+
+
+Put things together:
+
+.. code-block::
+
+    import asyncio
+
+    from aioqbt.api import AddFormBuilder
+    from aioqbt.client import create_client
+
+
+    async def main():
+        client = await create_client(
+            "http://localhost:8080/api/v2/",
+            username="admin",
+            password="adminadmin",
         )
 
-        # Print all torrent info
-        for info in await client.torrents.info():
-            print(info)
+        async with client:
+            print("Version", await client.app.version())
+            print("API", await client.app.webapi_version())
 
-Method organizations
+            # Add ubuntu-22.04.3-desktop-amd64.iso
+            url = "https://releases.ubuntu.com/22.04/ubuntu-22.04.3-desktop-amd64.iso.torrent"
+            await client.torrents.add(
+                AddFormBuilder.with_client(client)
+                .include_url(url)
+                .build()
+            )
+
+            await asyncio.sleep(10) # wait a few seconds
+
+            torrents = await client.torrents.info()
+            for info in torrents:
+                print(info)
+
+
+    asyncio.run(main())
+
+
+Output:
+
+.. code-block:: text
+
+    Version v4.5.5
+    API 2.8.19
+    <TorrentInfo 75439d5de343999ab377c617c2c647902956e282 downloading 'ubuntu-22.04.3-desktop-amd64.iso'>
+
+
+
+API organization
 --------------------
 
-WebUI APIs are organized into groups and methods.
-
-For example, to access the ``torrents/addTrackers`` endpoint, use
-:meth:`client.torrents.add_trackers() <.TorrentsAPI.add_trackers>`.
-
-    * :attr:`client.torrents <.APIClient.torrents>` is an API group containing API
-      methods with ``torrents/`` prefix.
-    * ``addTrackers`` in camelCase is renamed to ``add_trackers()`` in snake_case.
-    * Case conversion also applies to argument names.
-
-
-Supported APIs
-------------------
-
-APIs are supported as needed.
-Feature requests are welcome to discuss use-case details on :issue:`GitHub issues <>`.
-
-The following table summarizes currently available APIs
-and the corresponding attributes in :class:`.APIClient`.
+The qBittorrent WebUI APIs are organized into groups (auth, app, torrents, ...etc).
+Each group can be accessed via :class:`.APIClient` attributes.
+The qBittorrent Wiki provides a documentation as reference.
 
 .. list-table::
     :header-rows: 1
 
-    * - API Group
-      - Attribute
-      - Reference
-      - Notes
-    * - :APIWiki:`Authentication <#authentication>`
-      - :attr:`~.APIClient.auth`
+    * - Client attribute
+      - API Group
+      - Wiki
+
+    * - :attr:`~.APIClient.auth`
       - :class:`~.AuthAPI`
-      -
-    * - :APIWiki:`Application <#application>`
-      - :attr:`~.APIClient.app`
+      - :APIWiki:`Authentication <#authentication>`
+
+    * - :attr:`~.APIClient.app`
       - :class:`~.AppAPI`
-      - ``preferences`` is not supported.
-    * - :APIWiki:`Log <#log>`
-      - :attr:`~.APIClient.log`
+      - :APIWiki:`Application <#application>`
+
+    * - :attr:`~.APIClient.log`
       - :class:`~.LogAPI`
-      -
-    * - :APIWiki:`Sync <#sync>`
-      - :attr:`~.APIClient.sync`
+      - :APIWiki:`Log <#log>`
+
+    * - :attr:`~.APIClient.sync`
       - :class:`~.SyncAPI`
-      -
-    * - :APIWiki:`Transfer info <#transfer-info>`
-      - :attr:`~.APIClient.transfer`
+      - :APIWiki:`Sync <#sync>`
+
+    * - :attr:`~.APIClient.transfer`
       - :class:`~.TransferAPI`
-      -
-    * - :APIWiki:`Torrent management <#torrent-management>`
-      - :attr:`~.APIClient.torrents`
+      - :APIWiki:`Transfer info <#transfer-info>`
+
+    * - :attr:`~.APIClient.torrents`
       - :class:`~.TorrentsAPI`
-      -
-    * - :APIWiki:`RSS <#rss-experimental>`
-      -
-      -
-      - Unsupported
-    * - :APIWiki:`Search <#search>`
-      -
-      -
-      - Unsupported
+      - :APIWiki:`Torrent management <#torrent-management>`
+
+For example, ``torrents/addTrackers`` endpoint under ``torrents`` group is represented
+by :meth:`.TorrentsAPI.add_trackers`, which can be accessed
+via client's ``torrents`` attribute:
+
+.. code-block:: python
+
+    await client.torrents.add_trackers(["http://example.com/tracker"])
+
+
+.. note::
+
+    In general, naming convention is applied in methods and parameters:
+    `camelCase` is renamed to `snake_case`.

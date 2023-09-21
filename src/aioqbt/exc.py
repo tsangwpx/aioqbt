@@ -28,8 +28,7 @@ class VersionError(AQError):
 
 class APIError(AQError):
     """
-    Errors of unintended API response.
-
+    Base class of API errors.
     """
 
     message: str
@@ -82,7 +81,7 @@ class LoginError(APIError):
 
 class AddTorrentError(APIError):
     """
-    No URLs nor torrents were added.
+    No **new** torrents were added.
 
     This is raised by :meth:`.TorrentsAPI.add` and HTTP status is 200.
     """
@@ -92,10 +91,10 @@ class BadRequestError(APIError):
     """
     Bad request.
 
-    HTTP status is usually 400.
-
     The error is usually raised because of missing or invalid parameters.
     This may be caused by empty value sometimes.
+
+    HTTP status is usually 400.
     """
 
 
@@ -103,15 +102,17 @@ class ForbiddenError(APIError):
     """
     Forbidden.
 
-    HTTP status is usually 403.
-
     The request to resources is explicitly denied due to permission.
+
+    HTTP status is usually 403.
     """
 
 
 class NotFoundError(APIError):
     """
     Not found.
+
+    It is likely that the API endpoint is misspelled or qBittorrent need an update.
 
     HTTP status is usually 404.
     """

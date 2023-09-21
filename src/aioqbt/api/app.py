@@ -15,18 +15,21 @@ class AppAPI(APIGroup):
     """
 
     async def version(self) -> str:
+        """qBittorrent version."""
         return await self._request_text(
             "GET",
             "app/version",
         )
 
     async def webapi_version(self) -> str:
+        """WebUI API version."""
         return await self._request_text(
             "GET",
             "app/webapiVersion",
         )
 
     async def build_info(self) -> BuildInfo:
+        """Build information."""
         version_check(self._client().api_version, (2, 3, 0))
 
         return await self._request_mapped_object(
@@ -36,6 +39,7 @@ class AppAPI(APIGroup):
         )
 
     async def shutdown(self):
+        """Shut down qBittorrent client."""
         return await self._request_text(  # pragma: no cover
             "POST",
             "app/shutdown",
@@ -72,12 +76,14 @@ class AppAPI(APIGroup):
         )
 
     async def default_save_path(self) -> str:
+        """Default save path for storing downloaded files"""
         return await self._request_text(
             "GET",
             "app/defaultSavePath",
         )
 
     async def network_interface_list(self) -> List[NetworkInterface]:
+        """Network interfaces."""
         # since v4.2.0, API v2.3.0
         return await self._request_mapped_list(
             NetworkInterface,
@@ -86,6 +92,7 @@ class AppAPI(APIGroup):
         )
 
     async def network_interface_address_list(self, iface: Optional[str] = None) -> List[str]:
+        """Network addresses."""
         # since v4.2.0, API v2.3.0
         params = ParamDict()
         params.put("iface", iface, optional=False, prepare=str, default="")

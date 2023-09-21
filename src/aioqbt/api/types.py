@@ -22,7 +22,7 @@ from aioqbt.converter import (
 # define enums first
 class TorrentState(StrEnum):
     """
-    Torrent state to compare with :attr:`.TorrentInfo.state`.
+    Possible torrent states in :attr:`.TorrentInfo.state`.
     """
 
     ERROR = "error"
@@ -48,7 +48,7 @@ class TorrentState(StrEnum):
 
 class InfoFilter(StrEnum):
     """
-    Torrent ``filter`` in :meth:`.TorrentsAPI.info`.
+    Torrent state filter in :meth:`.TorrentsAPI.info`.
     """
 
     ALL = "all"
@@ -67,7 +67,7 @@ class InfoFilter(StrEnum):
 
 class PieceState(IntEnum):
     """
-    Piece state to compare with :meth:`.TorrentsAPI.piece_states` results.
+    Piece state in :meth:`.TorrentsAPI.piece_states` results.
     """
 
     UNAVAILABLE = 0
@@ -77,7 +77,7 @@ class PieceState(IntEnum):
 
 class TrackerStatus(IntEnum):
     """
-    Tracker status  to compare with :attr:`.Tracker.status`.
+    Tracker status in :attr:`.Tracker.status`.
     """
 
     DISABLED = 0
@@ -112,7 +112,7 @@ SeedingTimeLimitTypes = Union[timedelta, Minutes, SeedingTimeLimits]
 
 class StopCondition(StrEnum):
     """
-    Stop torrent when condition is fulfilled.
+    Stopping condition to pause torrents.
     """
 
     NONE = "None"
@@ -122,7 +122,7 @@ class StopCondition(StrEnum):
 
 class ContentLayout(StrEnum):
     """
-    Content layout that torrent files are organized
+    Content layout that downloaded files are organized.
     """
 
     ORIGINAL = "Original"
@@ -132,7 +132,7 @@ class ContentLayout(StrEnum):
 
 class FilePriority(IntEnum):
     """
-    File priority to compare with :attr:`.FileEntry.priority`.
+    File priority in :meth:`.TorrentsAPI.file_prio` and :attr:`.FileEntry.priority`.
     """
 
     NO_DOWNLOAD = 0
@@ -144,7 +144,7 @@ class FilePriority(IntEnum):
 
 class ConnectionStatus(StrEnum):
     """
-    Connection status to compare with :attr:`.TransferInfo.connection_status`.
+    Connection status in :attr:`.TransferInfo.connection_status`.
     """
 
     CONNECTED = "connected"
@@ -433,13 +433,23 @@ class NetworkInterface:
 @dataclass
 class TorrentInfo:
     """
-    See :meth:`.TorrentsAPI.info`.
+    Obtained from :meth:`.TorrentsAPI.info`.
+
+    Also see :APIWiki:`qBittorrent Wiki <#get-torrent-list>` for attribute meanings.
+
+    .. include:: shared/missing_attributes.rst
     """
 
     hash: str
-    infohash_v1: str  # API v2.8.4
-    infohash_v2: str  # API v2.8.4
+    """Torrent ID (info hash)"""
+
+    infohash_v1: str  # API 2.8.4
+    infohash_v2: str  # API 2.8.4
+    """``infohash_v1`` and ``infohash_v2`` are available since v4.4.0"""
+
     name: str
+    """Torrent name."""
+
     magnet_uri: str
     size: int
     progress: float
@@ -540,13 +550,18 @@ class TorrentInfo:
 @dataclass
 class TorrentProperties:
     """
-    See :meth:`.TorrentsAPI.properties`.
+    Obtained from :meth:`.TorrentsAPI.properties`.
+
+    .. include:: shared/missing_attributes.rst
     """
 
     infohash_v1: str  # API v2.8.3
     infohash_v2: str  # API v2.8.3
+    """``infohash_v1`` and ``infohash_v2`` are available since v4.4.0"""
+
     name: str  # API v2.8.19
     hash: str  # API v2.8.19
+    """``name`` and ``hash`` are available since v4.5.2"""
 
     time_elapsed: timedelta = field(
         metadata={
@@ -726,7 +741,7 @@ class LogPeer:
 
 class SyncTorrentInfo(TypedDict, total=False):
     """
-    See :class:`.SyncMainData`.
+    Dict of torrent info in :attr:`.SyncMainData.torrents`.
     """
 
     name: str
@@ -766,7 +781,7 @@ class SyncTorrentInfo(TypedDict, total=False):
 
 class SyncCategory(TypedDict, total=False):
     """
-    See :class:`.SyncMainData`.
+    Dict of category properties in :attr:`.SyncMainData.categories`.
     """
 
     name: str
@@ -775,7 +790,7 @@ class SyncCategory(TypedDict, total=False):
 
 class SyncServerState(TypedDict, total=False):
     """
-    See :class:`.SyncMainData`.
+    Dict of qBittorrent status and statistics in :attr:`.SyncMainData.server_state`.
     """
 
     connection_status: str
@@ -794,7 +809,7 @@ class SyncServerState(TypedDict, total=False):
 @dataclass
 class SyncMainData:
     """
-    See :meth:`.SyncAPI.maindata`.
+    Sync results obtained from :meth:`.SyncAPI.maindata`.
     """
 
     rid: int
@@ -832,7 +847,7 @@ class SyncMainData:
 
 class SyncPeer(TypedDict, total=False):
     """
-    See :class:`.SyncTorrentPeers`.
+    Dict of peer info in :attr:`.SyncTorrentPeers.peers`.
     """
 
     ip: str

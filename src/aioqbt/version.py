@@ -147,6 +147,8 @@ class APIVersion(NamedTuple):
         Format::
 
             major.minor[.release]
+
+        where ``major``, ``minor`` and ``release`` are all digits.
         """
         match = _API_VERSION_PATTERN.match(version)
 
@@ -167,12 +169,12 @@ class APIVersion(NamedTuple):
         b: Optional[Union[Self, Tuple[int, int, int]]],
     ) -> int:
         """
-        Compare two API versions
+        Compare two API versions.
 
-        `None` is a special value and is treated as the latest version.
+        Return zero if ``a == b``; a negative value if ``a < b``;
+        or a positive value if ``a > b``.
 
-        Return zero if `a == b`; a value less than zero if `a < b`;
-        or a value greater than zero if `a > b`.
+        ``None`` is a special value treated as the latest version.
 
         :return: integer value indicating version relationship.
         """

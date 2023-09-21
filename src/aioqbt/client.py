@@ -165,7 +165,7 @@ class APIClient:
         :param ssl: :class:`~ssl.SSLContext`, optional
         :raise APIError: API errors
         :raise aiohttp.ClientError: connection errors
-        :return: :class:`~aiohttp.ClientResponse` object
+        :return: :class:`~aiohttp.ClientResponse`
         """
 
         if max_attempts <= 0:
@@ -295,7 +295,6 @@ class APIClient:
         self,
         method: str,
         endpoint: str,
-        json_types: Union[type, Tuple[type, ...], None] = None,
         **kwargs,
     ) -> Any:
         """
@@ -488,19 +487,18 @@ async def create_client(
     """
     Create :class:`APIClient`.
 
-    When both ``username`` and ``password`` are given
-    and a session is successfully authenticated,
-    :class:`APIClient` is returned and versions are injected.
+    When both ``username`` and ``password`` are given,
+    the returned client will be authenticated successfully and automatically configured.
     Otherwise, :exc:`LoginError <aioqbt.exc.LoginError>` is raised.
 
-    When both ``username`` and ``password`` are omitted,
-    the client returned may need authentication and further configurations.
+    If they are omitted, :meth:`client.auth.login() <.AuthAPI.login>` need to be called manually.
 
     :param str url: URL to WebUI API, for example, ``https://localhost:8080/api/v2/``
-    :param str username: login name, optional
-    :param str password: login password, optional
-    :param http: :class:`~aiohttp.ClientSession` object, optional
-    :param ssl: :class:`~ssl.SSLContext` for TLS connections, optional
+    :param str username: login name
+    :param str password: login password
+    :param http: :class:`aiohttp.ClientSession` object
+    :param ssl: :class:`ssl.SSLContext` for custom TLS connections
+    :raises LoginError: if authentication is failed.
     """
     if (username is None) != (password is None):
         raise TypeError("Specify both username and password arguments, or neither of them")

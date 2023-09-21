@@ -31,13 +31,12 @@ Client
 
 .. autoclass:: APIGroup()
 
-API methods
+APIs
 ================
 
 .. automodule:: aioqbt.api
-    :synopsis: API methods
 
-TorrentsAPI
+Torrents
 ----------------
 
 .. autoclass:: TorrentsAPI()
@@ -51,86 +50,102 @@ TorrentsAPI
     :member-order: bysource
 
 
-AppAPI
+App
 ----------------
 .. autoclass:: AppAPI()
     :members:
     :undoc-members:
 
 
-AuthAPI
+Auth
 ----------------
 .. autoclass:: AuthAPI()
     :members:
     :undoc-members:
 
 
-LogAPI
+Log
 ----------------
 .. autoclass:: LogAPI()
     :members:
     :undoc-members:
 
 
-SyncAPI
+Sync
 ----------------
 .. autoclass:: SyncAPI()
     :members:
     :undoc-members:
 
 
-TransferAPI
+Transfer
 ----------------
 .. autoclass:: TransferAPI()
     :members:
     :undoc-members:
 
-
-
 API types
 ================
 
 .. automodule:: aioqbt.api.types
-    :synopsis: API types
+    :synopsis: Constants and data structures
 
+Constants
+---------------
 
-Enums
-----------------
-.. autoclass:: TorrentState
+.. autoclass:: TorrentState()
     :members:
     :undoc-members:
 
-.. autoclass:: InfoFilter
+.. autoclass:: InfoFilter()
     :members:
     :undoc-members:
 
-.. autoclass:: PieceState
+.. autoclass:: PieceState()
     :members:
     :undoc-members:
 
-.. autoclass:: TrackerStatus
+.. autoclass:: TrackerStatus()
     :members:
     :undoc-members:
 
-.. autoclass:: RatioLimits
+.. autoclass:: RatioLimits()
     :members:
     :undoc-members:
 
-.. autoclass:: SeedingTimeLimits
+.. autoclass:: SeedingTimeLimits()
     :members:
     :undoc-members:
 
-.. autoclass:: FilePriority
+.. autoclass:: StopCondition()
     :members:
     :undoc-members:
 
-.. autoclass:: ConnectionStatus
+.. autoclass:: ContentLayout()
+    :members:
+    :undoc-members:
+
+.. autoclass:: FilePriority()
+    :members:
+    :undoc-members:
+
+.. autoclass:: ConnectionStatus()
     :members:
     :undoc-members:
 
 Data structures
 ----------------
+
 .. autoclass:: BuildInfo()
+    :members:
+    :undoc-members:
+
+.. autoclass:: Preferences()
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. autoclass:: NetworkInterface()
     :members:
     :undoc-members:
 
@@ -166,15 +181,7 @@ Data structures
     :members:
     :undoc-members:
 
-.. autoclass:: SyncTorrentInfo()
-    :members:
-    :undoc-members:
-
-.. autoclass:: SyncCategory()
-    :members:
-    :undoc-members:
-
-.. autoclass:: SyncServerState()
+.. autoclass:: TransferInfo()
     :members:
     :undoc-members:
 
@@ -182,17 +189,30 @@ Data structures
     :members:
     :undoc-members:
 
-.. autoclass:: SyncPeer()
+.. autoclass:: SyncTorrentInfo()
     :members:
     :undoc-members:
+    :show-inheritance:
+
+.. autoclass:: SyncCategory()
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. autoclass:: SyncServerState()
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 .. autoclass:: SyncTorrentPeers()
     :members:
     :undoc-members:
 
-.. autoclass:: TransferInfo()
+.. autoclass:: SyncPeer()
     :members:
     :undoc-members:
+    :show-inheritance:
+
 
 
 Utilities
@@ -211,7 +231,7 @@ bittorrent
 
     * ``InfoHash`` represents an info hash (``str`` or ``bytes``).
     * ``InfoHashes`` is an iterable of ``InfoHash``.
-    * ``InfoHashOrAll`` is an extension to ``InfoHashes`` to include the string
+    * ``InfoHashOrAll`` is an extension to ``InfoHashes``. It allow the string
       literal ``all``, which specifies all torrents in some API methods.
 
 chrono
@@ -222,7 +242,7 @@ chrono
 .. data:: Seconds
 .. data:: Minutes
 
-    Type hints (similar to ``int``) for durations in specific units.
+    Type hints (similar to ``int``) for time durations in specific units.
 
 .. autoclass:: TimeUnit
     :members:

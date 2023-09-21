@@ -26,6 +26,9 @@ class SyncAPI(APIGroup):
     """
     API methods under ``sync``.
 
+    In Sync APIs, entries may be omitted in the returned dict objects
+    if their values are unchanged.
+
     .. note::
 
         Sync API support is experimental. Methods and results may
