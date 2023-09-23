@@ -12,9 +12,8 @@ from aioqbt.client import APIClient
 
 class TorrentData(NamedTuple):
     hash: str
-    name: Optional[str] = None
-    data: Optional[bytes] = None
-    single: Optional[str] = None
+    name: str
+    data: bytes
 
     @property
     def magnet(self) -> str:

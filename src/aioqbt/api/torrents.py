@@ -5,6 +5,7 @@ from datetime import timedelta
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple, Union, overload
 
 import aiohttp
+from typing_extensions import Self
 
 from aioqbt import exc
 from aioqbt._decorator import copy_self
@@ -938,7 +939,7 @@ class AddFormBuilder:
     __copy__ = __deepcopy__
 
     @copy_self
-    def include_url(self, url: str):
+    def include_url(self, url: str) -> Self:
         """
         Add a URL, magnet link, or info hash (SHA1/SHA256) to form.
         """
@@ -947,7 +948,7 @@ class AddFormBuilder:
         return self
 
     @copy_self
-    def include_file(self, data: bytes, filename: Optional[str] = None):
+    def include_file(self, data: bytes, filename: Optional[str] = None) -> Self:
         """
         Add a torrent file to form.
         """
@@ -958,23 +959,23 @@ class AddFormBuilder:
         self._files.append((bytes(data), filename))
         return self
 
-    def add_url(self, url: str):
+    def add_url(self, url: str) -> Self:
         """deprecated, use :meth:`.include_url` instead."""
         # deprecated, use include_url() instead
         return self.include_url(url)  # pragma: no cover
 
-    def add_torrent(self, filename: str, data: bytes):
+    def add_torrent(self, filename: str, data: bytes) -> Self:
         """deprecated, use :meth:`.include_file` instead."""
         return self.include_file(data, filename)  # pragma: no cover
 
     @copy_self
-    def savepath(self, savepath: StrPath):
+    def savepath(self, savepath: StrPath) -> Self:
         """Set ``savepath`` value."""
         self._savepath = _convert_path(savepath)
         return self
 
     @copy_self
-    def download_path(self, download_path: StrPath):
+    def download_path(self, download_path: StrPath) -> Self:
         """
         Set ``downloadPath`` value.
 
@@ -985,7 +986,7 @@ class AddFormBuilder:
         return self
 
     @copy_self
-    def use_download_path(self, use_download_path: bool):
+    def use_download_path(self, use_download_path: bool) -> Self:
         """
         Set ``useDownloadPath`` value.
         """
@@ -994,19 +995,19 @@ class AddFormBuilder:
         return self
 
     @copy_self
-    def cookie(self, cookie: str):
+    def cookie(self, cookie: str) -> Self:
         """Set ``cookie`` value."""
         self._cookie = cookie
         return self
 
     @copy_self
-    def category(self, category: str):
+    def category(self, category: str) -> Self:
         """Set ``category`` value."""
         self._category = category
         return self
 
     @copy_self
-    def tags(self, tags: Iterable[str]):
+    def tags(self, tags: Iterable[str]) -> Self:
         """
         Associate torrents being added with tags.
 
@@ -1031,19 +1032,19 @@ class AddFormBuilder:
         return self
 
     @copy_self
-    def skip_checking(self, skip_checking: bool):
+    def skip_checking(self, skip_checking: bool) -> Self:
         """Set ``skip_checking`` value."""
         self._skip_checking = skip_checking
         return self
 
     @copy_self
-    def paused(self, paused: bool):
+    def paused(self, paused: bool) -> Self:
         """Set ``paused`` value."""
         self._paused = paused
         return self
 
     @copy_self
-    def root_folder(self, root_folder: bool):
+    def root_folder(self, root_folder: bool) -> Self:
         """
         Set ``root_folder`` value.
 
@@ -1053,26 +1054,26 @@ class AddFormBuilder:
         return self
 
     @copy_self
-    def rename(self, rename: str):
+    def rename(self, rename: str) -> Self:
         """Set ``rename`` value, which is the new torrent name."""
         self._rename = rename
         return self
 
     @copy_self
-    def up_limit(self, up_limit: int):
+    def up_limit(self, up_limit: int) -> Self:
         """Set ``upLimit`` in bytes/s"""
         self._up_limit = up_limit
         return self
 
     @copy_self
-    def dl_limit(self, dl_limit: int):
+    def dl_limit(self, dl_limit: int) -> Self:
         """Set ``dlLimit`` in bytes/s"""
         self._dl_limit = dl_limit
         return self
 
     @copy_self
     @since((2, 8, 1))
-    def ratio_limit(self, ratio_limit: RatioLimitTypes):
+    def ratio_limit(self, ratio_limit: RatioLimitTypes) -> Self:
         """Set ``ratioLimit`` value."""
         version_check(self.api_version, (2, 8, 1))
         self._ratio_limit = float(ratio_limit)
@@ -1080,39 +1081,39 @@ class AddFormBuilder:
 
     @copy_self
     @since((2, 8, 1))
-    def seeding_time_limit(self, seeding_time_limit: SeedingTimeLimitTypes):
+    def seeding_time_limit(self, seeding_time_limit: SeedingTimeLimitTypes) -> Self:
         """Set ``seedingTimeLimit`` value."""
         version_check(self.api_version, (2, 8, 1))
         self._seeding_time_limit = int(_convert_duration(seeding_time_limit, TimeUnit.MINUTES))
         return self
 
     @copy_self
-    def auto_tmm(self, auto_tmm: bool):
+    def auto_tmm(self, auto_tmm: bool) -> Self:
         """Set ``autoTMM`` value."""
         self._auto_tmm = auto_tmm
         return self
 
     @copy_self
-    def sequential_download(self, sequential_download: bool):
+    def sequential_download(self, sequential_download: bool) -> Self:
         """Set ``sequentialDownload`` value."""
         self._sequential_download = sequential_download
         return self
 
     @copy_self
-    def first_last_piece_prio(self, first_last_piece_prio: bool):
+    def first_last_piece_prio(self, first_last_piece_prio: bool) -> Self:
         """Set ``firstLastPiecePrio`` value."""
         self._first_last_piece_prio = first_last_piece_prio
         return self
 
     @copy_self
-    def stop_condition(self, stop_condition: StopCondition):
+    def stop_condition(self, stop_condition: StopCondition) -> Self:
         """Set ``stopCondition`` value."""
         # API v2.8.15
         self._stop_condition = str(stop_condition)
         return self
 
     @copy_self
-    def content_layout(self, content_layout: ContentLayout):
+    def content_layout(self, content_layout: ContentLayout) -> Self:
         """Set ``contentLayout`` value."""
         # API v2.7.0
         self._content_layout = str(content_layout)
@@ -1199,7 +1200,7 @@ class AddFormBuilder:
         return form
 
     @classmethod
-    def with_client(cls, client: "APIClient"):
+    def with_client(cls, client: "APIClient") -> Self:
         """
         Return :class:`.AddFormBuilder` to build :class:`~aiohttp.FormData`
         used in :meth:`.TorrentsAPI.add`.
