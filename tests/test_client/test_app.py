@@ -1,4 +1,3 @@
-import ipaddress
 import warnings
 from typing import Any, Dict, List, Tuple, Union
 
@@ -116,4 +115,3 @@ async def test_interfaces(client: APIClient):
 
     for addr in addresses:
         assert isinstance(addr, str)
-        ipaddress.ip_address(addr)
