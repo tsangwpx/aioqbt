@@ -1,6 +1,5 @@
 import dataclasses
 import os
-from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple, Union, overload
 
@@ -864,7 +863,7 @@ class TorrentsAPI(APIGroup):
             return await resp.read()
 
 
-@dataclass
+@dataclasses.dataclass
 class AddFormBuilder:
     """
     Build :class:`~aiohttp.FormData` used in :meth:`.TorrentsAPI.add`.
@@ -906,8 +905,8 @@ class AddFormBuilder:
     client_version: Optional[ClientVersion] = None
     api_version: Optional[APIVersion] = None
 
-    _urls: List[str] = field(default_factory=list)
-    _files: List[Tuple[bytes, str]] = field(default_factory=list)
+    _urls: List[str] = dataclasses.field(default_factory=list)
+    _files: List[Tuple[bytes, str]] = dataclasses.field(default_factory=list)
 
     _savepath: Optional[str] = None
     _download_path: Optional[str] = None

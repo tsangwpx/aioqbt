@@ -2,7 +2,6 @@
 Types utilized and returned by API methods.
 """
 import enum
-from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
@@ -17,6 +16,7 @@ from aioqbt.converter import (
     EnumConverter,
     ScalarListConverter,
 )
+from aioqbt.mapper import declarative, field
 
 
 # define enums first
@@ -169,7 +169,7 @@ def _table_from_enum(enum_type: Type[_E]) -> Dict[int, _E]:
 
 
 # define dataclasses after enums
-@dataclass
+@declarative
 class BuildInfo:
     """
     See :meth:`.AppAPI.build_info`.
@@ -420,7 +420,7 @@ class Preferences(TypedDict, total=False):
     web_ui_password: str
 
 
-@dataclass
+@declarative
 class NetworkInterface:
     """
     See :meth:`.AppAPI.network_interface_list`.
@@ -430,7 +430,7 @@ class NetworkInterface:
     value: str
 
 
-@dataclass
+@declarative
 class TorrentInfo:
     """
     Obtained from :meth:`.TorrentsAPI.info`.
@@ -462,23 +462,17 @@ class TorrentInfo:
     num_incomplete: int
 
     state: TorrentState = field(
-        metadata={
-            "convert": EnumConverter(TorrentState),
-        }
+        convert=EnumConverter(TorrentState),
     )
     eta: timedelta = field(
-        metadata={
-            "convert": DurationConverter(TimeUnit.SECONDS),
-        }
+        convert=DurationConverter(TimeUnit.SECONDS),
     )
     seq_dl: bool
     f_l_piece_prio: bool
 
     category: str
     tags: List[str] = field(
-        metadata={
-            "convert": ScalarListConverter(","),
-        }
+        convert=ScalarListConverter(","),
     )
     super_seeding: bool
     force_start: bool
@@ -486,14 +480,10 @@ class TorrentInfo:
     download_path: str  # API v2.8.4
     content_path: str  # API v2.6.1
     added_on: datetime = field(
-        metadata={
-            "convert": DateTimeConverter(),  # unix timestamp
-        }
+        convert=DateTimeConverter(),  # unix timestamp
     )
     completion_on: datetime = field(
-        metadata={
-            "convert": DateTimeConverter(),  # unix timestamp
-        }
+        convert=DateTimeConverter(),  # unix timestamp
     )
     tracker: str
     trackers_count: int
@@ -507,37 +497,25 @@ class TorrentInfo:
     completed: int
     max_ratio: float
     max_seeding_time: Optional[timedelta] = field(
-        metadata={
-            "convert": DurationConverter(TimeUnit.MINUTES, _DURATION_NONE_TABLE),
-        }
+        convert=DurationConverter(TimeUnit.MINUTES, _DURATION_NONE_TABLE),
     )
     ratio: float
     ratio_limit: float
     seeding_time_limit: SeedingTimeLimitTypes = field(
-        metadata={
-            "convert": DurationConverter(TimeUnit.MINUTES, _table_from_enum(SeedingTimeLimits)),
-        }
+        convert=DurationConverter(TimeUnit.MINUTES, _table_from_enum(SeedingTimeLimits)),
     )
     seen_complete: datetime = field(
-        metadata={
-            "convert": DateTimeConverter(),
-        }
+        convert=DateTimeConverter(),
     )
     auto_tmm: bool
     time_active: timedelta = field(
-        metadata={
-            "convert": DurationConverter(TimeUnit.SECONDS),
-        }
+        convert=DurationConverter(TimeUnit.SECONDS),
     )
     seeding_time: timedelta = field(
-        metadata={
-            "convert": DurationConverter(TimeUnit.SECONDS),
-        }
+        convert=DurationConverter(TimeUnit.SECONDS),
     )
     last_activity: datetime = field(
-        metadata={
-            "convert": DateTimeConverter(),
-        }
+        convert=DateTimeConverter(),
     )
     availability: float
 
@@ -547,7 +525,7 @@ class TorrentInfo:
         return f"<{type(self).__name__} {self.hash} {self.state.value} {self.name!r}>"
 
 
-@dataclass
+@declarative
 class TorrentProperties:
     """
     Obtained from :meth:`.TorrentsAPI.properties`.
@@ -564,19 +542,13 @@ class TorrentProperties:
     """``name`` and ``hash`` are available since v4.5.2"""
 
     time_elapsed: timedelta = field(
-        metadata={
-            "convert": DurationConverter(TimeUnit.SECONDS),
-        }
+        convert=DurationConverter(TimeUnit.SECONDS),
     )
     seeding_time: timedelta = field(
-        metadata={
-            "convert": DurationConverter(TimeUnit.MINUTES),
-        }
+        convert=DurationConverter(TimeUnit.MINUTES),
     )
     eta: timedelta = field(
-        metadata={
-            "convert": DurationConverter(TimeUnit.SECONDS),
-        }
+        convert=DurationConverter(TimeUnit.SECONDS),
     )
     nb_connections: int
     nb_connections_limit: int
@@ -597,9 +569,7 @@ class TorrentProperties:
     peers_total: int
     share_ratio: float
     reannounce: timedelta = field(
-        metadata={
-            "convert": DurationConverter(TimeUnit.SECONDS),
-        }
+        convert=DurationConverter(TimeUnit.SECONDS),
     )
     total_size: int
     pieces_num: int
@@ -608,25 +578,17 @@ class TorrentProperties:
     created_by: str
     is_private: bool  # v2.8.20
     addition_date: datetime = field(
-        metadata={
-            "convert": DateTimeConverter(),
-        }
+        convert=DateTimeConverter(),
     )
 
     last_seen: Optional[datetime] = field(
-        metadata={
-            "convert": DateTimeConverter(_DATETIME_NONE_TABLE),
-        }
+        convert=DateTimeConverter(_DATETIME_NONE_TABLE),
     )
     completion_date: Optional[datetime] = field(
-        metadata={
-            "convert": DateTimeConverter(_DATETIME_NONE_TABLE),
-        }
+        convert=DateTimeConverter(_DATETIME_NONE_TABLE),
     )
     creation_date: Optional[datetime] = field(
-        metadata={
-            "convert": DateTimeConverter(_DATETIME_NONE_TABLE),
-        }
+        convert=DateTimeConverter(_DATETIME_NONE_TABLE),
     )
 
     save_path: str
@@ -645,7 +607,7 @@ class TorrentProperties:
             return f"<{cls_name} hash={hash!s} name={name!r}>"
 
 
-@dataclass
+@declarative
 class Tracker:
     """
     See :meth:`.TorrentsAPI.trackers`.
@@ -653,9 +615,7 @@ class Tracker:
 
     url: str
     status: TrackerStatus = field(
-        metadata={
-            "convert": EnumConverter(TrackerStatus),
-        }
+        convert=EnumConverter(TrackerStatus),
     )
     tier: int
     num_peers: int
@@ -679,7 +639,7 @@ class Tracker:
         return url.startswith("** [") and url.endswith("] **")
 
 
-@dataclass
+@declarative
 class WebSeed:
     """
     See :meth:`.TorrentsAPI.webseeds`.
@@ -688,7 +648,7 @@ class WebSeed:
     url: str
 
 
-@dataclass
+@declarative
 class FileEntry:
     """
     See :meth:`.TorrentsAPI.files`.
@@ -704,7 +664,7 @@ class FileEntry:
     index: int = field(repr=False)  # since API v2.8.2
 
 
-@dataclass
+@declarative
 class Category:
     """
     See :meth:`.TorrentsAPI.categories`.
@@ -714,7 +674,7 @@ class Category:
     savePath: str
 
 
-@dataclass
+@declarative
 class LogMessage:
     """
     See :meth:`.LogAPI.main`.
@@ -726,7 +686,7 @@ class LogMessage:
     type: int
 
 
-@dataclass
+@declarative
 class LogPeer:
     """
     See :meth:`.LogAPI.peers`.
@@ -806,7 +766,7 @@ class SyncServerState(TypedDict, total=False):
     free_space_on_disk: int
 
 
-@dataclass
+@declarative
 class SyncMainData:
     """
     Sync results obtained from :meth:`.SyncAPI.maindata`.
@@ -814,34 +774,22 @@ class SyncMainData:
 
     rid: int
     full_update: bool = field(
-        metadata={
-            "default": False,
-        }
+        default=False,
     )
     torrents: Dict[str, SyncTorrentInfo] = field(
-        metadata={
-            "default_factory": dict,
-        }
+        default_factory=dict,
     )
     torrents_removed: List[str] = field(
-        metadata={
-            "default_factory": list,
-        }
+        default_factory=list,
     )
     categories: Dict[str, SyncCategory] = field(
-        metadata={
-            "default_factory": dict,
-        }
+        default_factory=dict,
     )
     categories_removed: List[str] = field(
-        metadata={
-            "default_factory": list,
-        }
+        default_factory=list,
     )
     server_state: SyncServerState = field(
-        metadata={
-            "default_factory": SyncServerState,
-        }
+        default_factory=lambda: SyncServerState(),
     )
 
 
@@ -867,32 +815,20 @@ class SyncPeer(TypedDict, total=False):
     country: str
 
 
-@dataclass
+@declarative
 class SyncTorrentPeers:
     """
     See :meth:`.SyncAPI.torrent_peers`.
     """
 
     rid: int
-    full_update: bool = field(
-        metadata={
-            "default": False,
-        }
-    )
+    full_update: bool = field(default=False)
     # "show_flags" may be true, false or missing
-    show_flags: Optional[bool] = field(
-        metadata={
-            "default": None,
-        }
-    )
-    peers: Dict[str, SyncPeer] = field(
-        metadata={
-            "default_factory": dict,
-        }
-    )
+    show_flags: Optional[bool] = field(default=None)
+    peers: Dict[str, SyncPeer] = field(default_factory=dict)
 
 
-@dataclass
+@declarative
 class TransferInfo:
     """
     See :meth:`.TransferAPI.info`.
@@ -907,7 +843,5 @@ class TransferInfo:
     dht_nodes: int
 
     connection_status: ConnectionStatus = field(
-        metadata={
-            "convert": EnumConverter(ConnectionStatus),
-        }
+        convert=EnumConverter(ConnectionStatus),
     )

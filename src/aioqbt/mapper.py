@@ -1,8 +1,17 @@
-from dataclasses import MISSING, dataclass
-from dataclasses import fields as dataclass_fields
-from dataclasses import is_dataclass
+"""
+Tools that create objects representing API results.
+
+This module is internal to the package.
+End users should not import this module directly.
+"""
+
+import builtins
+import dataclasses
+import sys
+from dataclasses import MISSING, dataclass, is_dataclass
 from enum import Enum
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Dict,
@@ -15,10 +24,10 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    overload,
 )
-from weakref import WeakKeyDictionary
 
-from typing_extensions import Protocol
+from typing_extensions import Protocol, dataclass_transform
 
 from aioqbt.exc import MapperError
 
@@ -26,17 +35,34 @@ __all__ = (
     "ConvertFn",
     "ObjectMapper",
     "inspect_raw_data",
+    "declarative",
+    "field",
 )
 
 T = TypeVar("T")
 E = TypeVar("E", bound=Enum)
 K = TypeVar("K")
 
+if TYPE_CHECKING:
+    # mypy go here due to TYPE_CHECKING
+    # avoid that 'type' object is not subscriptable in py37 and py38
+    _FieldSequence = Sequence[dataclasses.Field[Any]]
+else:
+    _FieldSequence = Sequence[dataclasses.Field]
+
 _META_CONV = "convert"
-_META_DEFAULT = "default"
-_META_DEFAULT_FACTORY = "default_factory"
 
 ATTR_RAW_DATA = "_aioqbt_raw_data"
+ATTR_TYPE_INFO = "_aioqbt_type_info"
+
+
+class _MissingRepr:
+    def __repr__(self):
+        """return ``MISSING`` when format/print"""
+        return "MISSING"
+
+
+MISSING_REPR = _MissingRepr()
 
 
 class ConvertFn(Protocol):
@@ -62,8 +88,20 @@ class _TypeInfo(Generic[T]):
     default_fields: Sequence[str]
 
 
-# Cache: type -> MappedTypeInfo
-_REGISTRY: MutableMapping[Type[Any], _TypeInfo[Any]] = WeakKeyDictionary()
+def _find_type_info(rtype: Type[T]) -> _TypeInfo[T]:
+    try:
+        return getattr(rtype, ATTR_TYPE_INFO)
+    except AttributeError:
+        pass
+
+    info = _resolve_type_info(rtype)
+    setattr(rtype, ATTR_TYPE_INFO, info)
+
+    import warnings
+
+    warnings.warn(DeprecationWarning("Use @declarative() instead"))
+
+    return info
 
 
 def _resolve_slot_names(cls: Type[T]) -> List[str]:
@@ -102,7 +140,7 @@ def _resolve_type_info(cls: Type[T]) -> _TypeInfo[T]:
     fields: Dict[str, _FieldInfo] = {}
     default_fields: List[str] = []
 
-    for field in dataclass_fields(cls):
+    for field in dataclasses.fields(cls):
         f_name = field.name
         f_metadata = field.metadata
 
@@ -113,10 +151,8 @@ def _resolve_type_info(cls: Type[T]) -> _TypeInfo[T]:
         if conv is not None and not callable(conv):
             raise ValueError(f"'convert' functon for field {f_name!r} must be a callable")
 
-        default = f_metadata.get(_META_DEFAULT, MISSING)
-        default_factory = f_metadata.get(_META_DEFAULT_FACTORY, None)
-
-        default_factory = None if default_factory is MISSING else default_factory
+        default = field.default
+        default_factory = None if field.default_factory is MISSING else field.default_factory
 
         if default_factory is not None and not callable(default_factory):
             raise ValueError(
@@ -146,15 +182,6 @@ class ObjectMapper:
     Map JSON-result to Python objects.
     """
 
-    def _find_type_info(self, rtype: Type[T]) -> _TypeInfo[T]:
-        try:
-            type_info = _REGISTRY[rtype]
-        except KeyError:
-            type_info = _resolve_type_info(rtype)
-            _REGISTRY[rtype] = type_info
-
-        return type_info
-
     def create_object(
         self,
         rtype: Type[T],
@@ -164,7 +191,7 @@ class ObjectMapper:
         """
         Create an object from its data.
         """
-        info = self._find_type_info(rtype)
+        info = _find_type_info(rtype)
 
         dict_data = dict(data)  # copy
 
@@ -253,3 +280,312 @@ def inspect_raw_data(instance) -> Dict[str, Any]:
         return getattr(instance, ATTR_RAW_DATA)
     except AttributeError:
         raise LookupError from None
+
+
+@overload
+def field(
+    *,
+    default: T,
+    init: bool = ...,
+    repr: bool = ...,
+    compare: bool = ...,
+    hash: Optional[bool] = ...,
+    convert: Optional[ConvertFn] = ...,
+    metadata: Optional[Mapping[Any, Any]] = ...,
+) -> T:
+    ...
+
+
+@overload
+def field(
+    *,
+    default_factory: Callable[[], T],
+    init: bool = ...,
+    repr: bool = ...,
+    compare: bool = ...,
+    hash: Optional[bool] = ...,
+    convert: Optional[ConvertFn] = ...,
+    metadata: Optional[Mapping[Any, Any]] = ...,
+) -> T:
+    ...
+
+
+@overload
+def field(
+    *,
+    init: bool = ...,
+    repr: bool = ...,
+    compare: bool = ...,
+    hash: Optional[bool] = ...,
+    convert: Optional[ConvertFn] = ...,
+    metadata: Optional[Mapping[Any, Any]] = ...,
+) -> Any:
+    ...
+
+
+def field(
+    *,
+    default: Any = MISSING,
+    default_factory: Any = MISSING,
+    init: bool = True,
+    repr: bool = True,
+    compare: bool = True,
+    hash: Optional[bool] = None,
+    convert: Optional[ConvertFn] = None,
+    metadata: Optional[Mapping[Any, Any]] = None,
+) -> Any:
+    """
+    Field specifier of :func:`@declarative <.declarative>`.
+
+    This is implemented as a wrapper of :func:`dataclasses.field` and, thus, a replacement.
+    """
+
+    # Since MISSING type is private, typing.Any is used in default and default_factory.
+    # Return Any/T instead of Field[T] such that annotation matches in class definition.
+
+    if metadata is None:
+        metadata = {}
+    else:
+        metadata = dict(metadata)
+
+    if convert is not None:
+        if "convert" in metadata:
+            raise ValueError("Cannot specify 'convert' in both argument and metadata")
+        metadata["convert"] = convert
+
+    if not metadata:
+        metadata = None
+
+    if default_factory is MISSING:
+        return dataclasses.field(
+            default=default,
+            init=init,
+            repr=repr,
+            compare=compare,
+            hash=hash,
+            metadata=metadata,
+        )
+    elif default is MISSING:
+        return dataclasses.field(
+            default_factory=default_factory,
+            init=init,
+            repr=repr,
+            compare=compare,
+            hash=hash,
+            metadata=metadata,
+        )
+    else:
+        raise ValueError("Cannot specify both default and default_factory")
+
+
+@overload
+def declarative(cls: Type[T]) -> Type[T]:
+    ...
+
+
+@overload
+def declarative(
+    *,
+    init: bool = True,
+    repr: bool = True,
+    eq: bool = True,
+    unsafe_hash: bool = False,
+    frozen: bool = False,
+) -> Callable[[Type[T]], Type[T]]:
+    ...
+
+
+# PEP 681 - Data Class Transforms
+# https://peps.python.org/pep-0681/
+@dataclass_transform(
+    field_specifiers=(
+        dataclasses.Field,
+        dataclasses.field,
+        field,
+    ),
+)
+def declarative(
+    cls=None,
+    *,
+    init=True,
+    repr=True,
+    eq=True,
+    unsafe_hash=False,
+    frozen=False,
+):
+    """
+    Decorate a class to behave similarly to dataclass
+    """
+
+    def decorate(cls: Type[T]) -> Type[T]:
+        cls = _process_class(
+            cls,
+            init=init,
+            repr=repr,
+            eq=eq,
+            unsafe_hash=unsafe_hash,
+            frozen=frozen,
+        )
+
+        type_info = _resolve_type_info(cls)
+        setattr(cls, ATTR_TYPE_INFO, type_info)
+
+        return cls
+
+    if cls is None:
+        return decorate
+
+    return decorate(cls)
+
+
+def _process_class(
+    cls: Type[T],
+    *,
+    init: bool,
+    repr: bool,
+    eq: bool,
+    unsafe_hash: bool,
+    frozen: bool,
+) -> Type[T]:
+    """
+    Fix AttributeError in __eq__, __hash__, __repr__ due to missing attributes.
+    """
+
+    # Note that @declarative() leverages dataclasses facilities.
+    # However, ObjectMapper instantiates objects without invoking __init__().
+    # If __eq__, __hash__, and __repr__ are added by dataclasses,
+    # they are replaced with our ones to avoid AttributeError.
+
+    old_methods = {s: getattr(cls, s, None) for s in ("__eq__", "__hash__", "__repr__")}
+
+    wrap = dataclasses.dataclass(
+        init=init,
+        repr=repr,
+        eq=eq,
+        unsafe_hash=unsafe_hash,
+        frozen=frozen,
+    )
+    cls = wrap(cls)
+
+    def is_changed(name: str) -> bool:
+        old = old_methods[name]
+        new = getattr(cls, name, None)
+        return new is not None and old is not new
+
+    fields = dataclasses.fields(cls)  # type: ignore[arg-type]
+    module = sys.modules.get(cls.__module__)
+    globals = {} if module is None else vars(module)
+
+    if is_changed("__eq__"):
+        setattr(cls, "__eq__", _eq_fn(fields, globals=globals))
+
+    if is_changed("__hash__"):
+        setattr(cls, "__hash__", _hash_fn(fields, globals=globals))
+
+    if is_changed("__repr__"):
+        setattr(cls, "__repr__", _repr_fn(fields, globals=globals))
+
+    return cls
+
+
+def _eq_fn(
+    fields: _FieldSequence,
+    *,
+    globals: Optional[Dict[str, object]] = None,
+):
+    locals: Dict[str, object] = {
+        "MISSING": dataclasses.MISSING,
+    }
+    args = ("self", "other")
+    attrs = [f.name for f in fields if f.compare]
+    self_tuple = _getattr_tuple_str("self", attrs, "MISSING")
+    other_tuple = _getattr_tuple_str("other", attrs, "MISSING")
+    body = [
+        "if type(self) is type(other):",
+        f" return {self_tuple} == {other_tuple}",
+        "return NotImplemented",
+    ]
+
+    return _create_fn("__eq__", args, body, locals=locals, globals=globals)
+
+
+def _hash_fn(
+    fields: _FieldSequence,
+    *,
+    globals: Optional[Dict[str, object]] = None,
+):
+    locals: Dict[str, object] = {
+        "MISSING": dataclasses.MISSING,
+    }
+    args = ("self",)
+    attrs = [f.name for f in fields if (f.compare if f.hash is None else f.hash)]
+    self_tuple = _getattr_tuple_str("self", attrs, "MISSING")
+    body = [f"return hash({self_tuple})"]
+
+    return _create_fn("__hash__", args, body, locals=locals, globals=globals)
+
+
+def _repr_fn(
+    fields: _FieldSequence,
+    *,
+    globals: Optional[Dict[str, object]] = None,
+):
+    locals: Dict[str, object] = {
+        "MISSING_REPR": MISSING_REPR,
+    }
+    args = ("self",)
+    txt = "".join(
+        [f" {f.name}={{getattr(self, {f.name!r}, MISSING_REPR)!r}}" for f in fields if f.repr]
+    )
+    body = [
+        f'return f"<{{type(self).__name__}}{txt}>"',
+    ]
+    fn = _create_fn("__repr__", args, body, locals=locals, globals=globals)
+    from reprlib import recursive_repr
+
+    wrap = recursive_repr()
+    return wrap(fn)
+
+
+# modified from dataclasses.py
+def _getattr_tuple_str(
+    name: str,
+    attrs: Sequence[str],
+    default: str,
+) -> str:
+    if not attrs:
+        return "()"
+
+    return f"({','.join([f'getattr({name}, {s!r}, {default})' for s in attrs])},)"
+
+
+def _create_fn(
+    name: str,
+    args: Sequence[str],
+    body: Sequence[str],
+    *,
+    globals: Optional[Dict[str, object]] = None,
+    locals: Optional[MutableMapping[str, object]] = None,
+    return_type=dataclasses.MISSING,
+) -> Callable[..., Any]:
+    if locals is None:
+        locals = {}
+    if "BUILTINS" not in locals:
+        locals["BUILTINS"] = builtins
+    return_annotation = ""
+    if return_type is not dataclasses.MISSING:
+        locals["_return_type"] = return_type
+        return_annotation = "->_return_type"
+
+    args_txt = ", ".join(args)
+    body_txt = "\n".join([f"  {s}" for s in body])
+
+    # Compute the text of the entire function.
+    txt = f" def {name}({args_txt}){return_annotation}:\n{body_txt}"
+
+    local_vars = ", ".join(locals.keys())
+    source = f"def _create_fn({local_vars}):\n{txt}\n return {name}"
+
+    ns: Dict[str, Any] = {}
+    exec(source, globals, ns)
+    return ns["_create_fn"](**locals)

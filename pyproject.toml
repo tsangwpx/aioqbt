@@ -32,11 +32,9 @@ classifiers = [
     "Programming Language :: Python :: 3.7",
     "Typing :: Typed",
 ]
-
-# dependencies updated on 25 Sep 2022
 dependencies = [
     "aiohttp >= 3.8.1",
-    "typing-extensions >= 4.0.1",
+    "typing-extensions >= 4.2.0",
 ]
 
 # optional-dependencies is a table whose values are lists of PEP 508 strings
