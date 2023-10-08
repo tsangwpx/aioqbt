@@ -1,13 +1,9 @@
-import contextlib
 import random
 from hashlib import sha1
-from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Tuple
+from typing import Any, List, Mapping, NamedTuple, Optional, Tuple
 
 from helper import bencode
-from helper.lang import busy_wait_for, randbytes
-
-from aioqbt.api import AddFormBuilder
-from aioqbt.client import APIClient
+from helper.lang import randbytes
 
 
 class TorrentData(NamedTuple):
@@ -153,34 +149,3 @@ def make_torrent_files(
         name=name,
         data=torrent_bytes,
     )
-
-
-@contextlib.asynccontextmanager
-async def temporary_torrents(client: APIClient, *samples: TorrentData, paused: bool = True):
-    builder = AddFormBuilder.with_client(client)
-    builder = builder.paused(paused)
-
-    table: Dict[str, int] = {}
-    for i, item in enumerate(samples):
-        table[item.hash] = i
-        builder = builder.include_file(item.data, f"{item.name}.torrent")
-
-    hashes = list(table.keys())
-    torrents = []
-
-    if hashes:
-        await client.torrents.add(builder.build())
-
-        async def cond_added():
-            nonlocal torrents
-            torrents = await client.torrents.info(hashes=hashes)
-            return len(torrents) == len(hashes)
-
-        success = await busy_wait_for(cond_added)
-        assert success, f"Failed to add {len(samples)} torrents: {samples[0].name}"
-
-    try:
-        yield torrents
-    finally:
-        if hashes:
-            await client.torrents.delete(hashes, True)

@@ -5,7 +5,8 @@ from typing import Callable
 
 import pytest
 from helper.lang import one_moment, retry_assert
-from helper.torrent import TorrentData, make_torrent_files, make_torrent_single, temporary_torrents
+from helper.torrent import TorrentData, make_torrent_files, make_torrent_single
+from helper.webapi import temporary_torrents
 
 from aioqbt import exc
 from aioqbt.api import AddFormBuilder

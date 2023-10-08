@@ -4,12 +4,14 @@ from typing import Awaitable, Callable
 
 from aiohttp import web
 
+RequestHandler = Callable[[web.BaseRequest], Awaitable[web.StreamResponse]]
+
 
 @contextlib.asynccontextmanager
-async def temporary_site(runner: web.BaseRunner):
-    # bind a random TCP socket
+async def temporary_site(runner: web.BaseRunner, port: int = 0):
+    # bind a TCP socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.bind(("127.0.0.1", 0))
+    sock.bind(("127.0.0.1", port))
 
     # start server site
     site = web.SockSite(runner, sock)
@@ -28,13 +30,14 @@ async def temporary_site(runner: web.BaseRunner):
 
 
 @contextlib.asynccontextmanager
-async def temporary_site_handler(
-    handler: Callable[[web.BaseRequest], Awaitable[web.StreamResponse]],
+async def temporary_web_server(
+    handler: RequestHandler,
+    port: int = 0,
 ):
     # start web server
     server = web.Server(handler)
     runner = web.ServerRunner(server)
     await runner.setup()
 
-    async with temporary_site(runner) as url:
+    async with temporary_site(runner, port) as url:
         yield url

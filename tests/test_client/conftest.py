@@ -2,6 +2,8 @@ import pytest
 import pytest_asyncio
 from helper.service import LoginInfo, login_session_context, parse_login_env, server_process
 
+from aioqbt.client import APIClient
+
 
 @pytest.fixture(scope="session")
 def mock_login(tmp_path_factory):
@@ -23,3 +25,18 @@ def mock_login(tmp_path_factory):
 async def client(mock_login: LoginInfo):
     async with login_session_context(mock_login) as client:
         yield client
+
+
+@pytest_asyncio.fixture
+async def temp_prefs(client: APIClient):
+    """restore preferences after change"""
+    original = await client.app.preferences()
+
+    yield dict(original)
+
+    latest = await client.app.preferences()
+
+    changed = {k: v for k, v in original.items() if v != latest.get(k)}
+
+    if changed:
+        await client.app.set_preferences(changed)

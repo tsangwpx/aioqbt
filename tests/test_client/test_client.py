@@ -6,7 +6,7 @@ import aiohttp.web as aiohttp_web
 import pytest
 from aiohttp.hdrs import RETRY_AFTER
 from helper.service import LoginInfo
-from helper.web import temporary_site_handler
+from helper.web import temporary_web_server
 
 from aioqbt import exc
 from aioqbt.client import APIClient, create_client
@@ -136,7 +136,7 @@ async def test_retry_after_header():
             }
         )
 
-    async with temporary_site_handler(handler) as url, APIClient(url) as client:
+    async with temporary_web_server(handler) as url, APIClient(url) as client:
         with pytest.raises(exc.APIError, match="Service Unavailable"):
             resp = await client.request(
                 "GET",
@@ -168,6 +168,6 @@ async def test_error_message(body: Union[str, bytes], match):
             body=body,
         )
 
-    async with temporary_site_handler(handler) as url, APIClient(url) as client:
+    async with temporary_web_server(handler) as url, APIClient(url) as client:
         with pytest.raises(exc.BadRequestError, match=match):
             await client.request("GET", "/")

@@ -1,5 +1,6 @@
 import pytest
-from helper.torrent import make_torrent_single, temporary_torrents
+from helper.torrent import make_torrent_single
+from helper.webapi import temporary_torrents
 
 from aioqbt.api.types import SyncMainData, SyncTorrentPeers
 from aioqbt.client import APIClient
