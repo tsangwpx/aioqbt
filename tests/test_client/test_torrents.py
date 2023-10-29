@@ -470,6 +470,30 @@ async def test_rename_file(client: APIClient):
 
 
 @pytest.mark.asyncio
+async def test_rename_folder(client: APIClient):
+    if APIVersion.compare(client.api_version, (2, 8, 0)) < 0:
+        pytest.skip("require API 2.8.0")
+
+    sample = make_torrent_files("rename_folder")
+
+    async with temporary_torrents(client, sample):
+        # paths consist of torrent names and file names
+        await client.torrents.rename_folder(
+            sample.hash,
+            "rename_folder/files",
+            "rename_folder/other",
+        )
+
+        @retry_assert
+        async def assert_renamed():
+            files = await client.torrents.files(sample.hash)
+            empty = [s.name for s in files if "other" not in s.name]
+            assert empty == []
+
+        await assert_renamed()
+
+
+@pytest.mark.asyncio
 async def test_torrent_auto_tmm(client: APIClient):
     sample = make_torrent_single("torrent_auto_tmm")
     hashes = (sample.hash,)
