@@ -827,11 +827,23 @@ class TorrentsAPI(APIGroup):
         else:
             raise TypeError(f"Bad call signature: ({type(hash)!r}, {type(arg)!r}, {type(arg2)!r})")
 
-        await self._request_text(
-            "POST",
-            "torrents/renameFile",
-            data=data,
-        )
+        try:
+            await self._request_text(
+                "POST",
+                "torrents/renameFile",
+                data=data,
+            )
+        except exc.BadRequestError as ex:
+            if APIVersion.compare(self._client().api_version, (2, 4, 0)) >= 0:
+                note = (
+                    "From qBittorrent 4.2.1, rename_file(hash, id, name) was changed"
+                    " to rename_file(hash, old_path, new_path)."
+                    " BadRequestError may raise if rename_file() was called"
+                    " with inappropriate arguments."
+                )
+                exc._add_note(ex, note, logger=self._client()._logger)
+
+            raise
 
     @since((2, 8, 0))
     async def rename_folder(self, hash: InfoHash, old_path: str, new_path: str):

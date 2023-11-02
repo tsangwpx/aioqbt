@@ -2,7 +2,8 @@
 Exceptions raised in :mod:`aioqbt`.
 
 """
-
+import logging
+import sys
 from typing import Optional
 
 import aiohttp
@@ -143,3 +144,28 @@ _ERROR_TABLE = {
     409: ConflictError,
     415: UnsupportedMediaTypeError,
 }
+
+
+def _add_note(
+    ex: Optional[BaseException],
+    note: str,
+    *,
+    logger: Optional[logging.Logger] = None,
+    log_level: Optional[int] = None,
+) -> None:
+    """
+    Add a note to exception if Python version >= 3.11 or record with logger
+    """
+
+    if sys.version_info >= (3, 11):
+        ex.add_note(note)
+        return
+
+    # fallback to logging
+    if logger is None:
+        logger = logging.getLogger(f"{__name__}.note")
+
+    if log_level is None:
+        log_level = logging.WARNING
+
+    logger.log(log_level, note, exc_info=ex)
