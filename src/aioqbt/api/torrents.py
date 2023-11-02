@@ -26,7 +26,7 @@ from aioqbt.bittorrent import InfoHash, InfoHashes, InfoHashesOrAll, get_info_ha
 from aioqbt.chrono import TimeUnit
 from aioqbt.client import APIClient, APIGroup, since, virtual
 from aioqbt.typing import StrPath
-from aioqbt.version import APIVersion, ClientVersion, param_version_check, version_check
+from aioqbt.version import APIVersion, ClientVersion
 
 __all__ = (
     "AddFormBuilder",
@@ -94,7 +94,7 @@ class TorrentsAPI(APIGroup):
         params.optional_int("offset", offset)
 
         if tag is not None:
-            param_version_check("tag", self._client().api_version, (2, 8, 3))
+            # API 2.8.3
             params.optional_str("tag", tag)
 
         return await self._request_mapped_list(
@@ -148,7 +148,7 @@ class TorrentsAPI(APIGroup):
         params = ParamDict.with_hash(hash)
 
         if indexes is not None:
-            param_version_check("indexes", self._client().api_version, (2, 8, 2))
+            # API 2.8.2
             params.optional_list("indexes", indexes, "|")
 
         return await self._request_mapped_list(
@@ -815,7 +815,7 @@ class TorrentsAPI(APIGroup):
         See also: https://github.com/qbittorrent/qBittorrent/pull/13995
 
         """
-        version_check(self._client().api_version, (2, 4, 0))
+        # API 2.4.0
 
         data = ParamDict.with_hash(hash)
         if isinstance(arg, str):
@@ -836,7 +836,7 @@ class TorrentsAPI(APIGroup):
     @since((2, 8, 0))
     async def rename_folder(self, hash: InfoHash, old_path: str, new_path: str):
         """Rename a folder."""
-        version_check(self._client().api_version, (2, 8, 0))
+        # API 2.8.0
 
         data = ParamDict.with_hash(hash)
         data.required_path("oldPath", old_path)
@@ -1015,7 +1015,7 @@ class AddFormBuilder:
         :param tags: list of tags.
         """
 
-        version_check(self.api_version, (2, 6, 2))
+        # API 2.6.2
         _check_iterable_except_str("tags", tags)
 
         tags = list(tags)
@@ -1074,7 +1074,7 @@ class AddFormBuilder:
     @since((2, 8, 1))
     def ratio_limit(self, ratio_limit: RatioLimitTypes) -> Self:
         """Set ``ratioLimit`` value."""
-        version_check(self.api_version, (2, 8, 1))
+        # API 2.8.1
         self._ratio_limit = float(ratio_limit)
         return self
 
@@ -1082,7 +1082,7 @@ class AddFormBuilder:
     @since((2, 8, 1))
     def seeding_time_limit(self, seeding_time_limit: SeedingTimeLimitTypes) -> Self:
         """Set ``seedingTimeLimit`` value."""
-        version_check(self.api_version, (2, 8, 1))
+        # API 2.8.1
         self._seeding_time_limit = int(_convert_duration(seeding_time_limit, TimeUnit.MINUTES))
         return self
 

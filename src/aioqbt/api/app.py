@@ -4,7 +4,6 @@ from typing import List, Mapping, Optional
 from aioqbt._paramdict import ParamDict
 from aioqbt.api.types import BuildInfo, NetworkInterface, Preferences
 from aioqbt.client import APIGroup
-from aioqbt.version import version_check
 
 __all__ = ("AppAPI",)
 
@@ -30,7 +29,7 @@ class AppAPI(APIGroup):
 
     async def build_info(self) -> BuildInfo:
         """Build information."""
-        version_check(self._client().api_version, (2, 3, 0))
+        # API 2.3.0
 
         return await self._request_mapped_object(
             BuildInfo,

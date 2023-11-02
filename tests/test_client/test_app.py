@@ -7,7 +7,7 @@ from typing_extensions import get_origin, get_type_hints
 
 from aioqbt.api.types import BuildInfo, NetworkInterface, Preferences
 from aioqbt.client import APIClient
-from aioqbt.version import version_satisfy
+from aioqbt.version import APIVersion
 
 
 @pytest.mark.asyncio
@@ -20,7 +20,7 @@ async def test_app(client: APIClient):
     assert isinstance(webapi_version, str)
     assert webapi_version.startswith("2.")
 
-    if version_satisfy(client.api_version, (2, 3, 0)):
+    if APIVersion.compare(client.api_version, (2, 3, 0)) >= 0:
         build_info = await client.app.build_info()
         assert isinstance(build_info, BuildInfo)
         assert isinstance(build_info.qt, str)
@@ -99,7 +99,7 @@ async def test_set_preferences(client: APIClient):
 
 @pytest.mark.asyncio
 async def test_interfaces(client: APIClient):
-    if not version_satisfy(client.api_version, (2, 3, 0)):
+    if APIVersion.compare(client.api_version, (2, 3, 0)) < 0:
         pytest.skip("networkInterfaceList are available since API v2.3.0")
 
     interfaces = await client.app.network_interface_list()
