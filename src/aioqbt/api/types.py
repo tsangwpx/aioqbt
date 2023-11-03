@@ -108,6 +108,14 @@ class SeedingTimeLimits(IntEnum):
 SeedingTimeLimitTypes = Union[timedelta, Minutes, SeedingTimeLimits]
 
 
+class InactiveSeedingTimeLimits(IntEnum):
+    GLOBAL = -2
+    UNLIMITED = -1
+
+
+InactiveSeedingTimeLimitTypes = Union[timedelta, Minutes, InactiveSeedingTimeLimits]
+
+
 class StopCondition(StrEnum):
     """
     Stopping condition to pause torrents.
@@ -321,6 +329,8 @@ class Preferences(TypedDict, total=False):
     max_ratio: int
     max_seeding_time_enabled: bool
     max_seeding_time: int
+    max_inactive_seeding_time_enabled: bool  # 4.6.0
+    max_inactive_seeding_time: int  # 4.6.0
     max_ratio_act: int
 
     add_trackers_enabled: bool
@@ -512,9 +522,15 @@ class TorrentInfo:
     max_seeding_time: Optional[timedelta] = field(
         convert=DurationConverter(TimeUnit.MINUTES, _DURATION_NONE_TABLE),
     )
+    max_inactive_seeding_time: Optional[timedelta] = field(
+        convert=DurationConverter(TimeUnit.MINUTES, _DURATION_NONE_TABLE),
+    )
     ratio: float
     ratio_limit: float
     seeding_time_limit: SeedingTimeLimitTypes = field(
+        convert=DurationConverter(TimeUnit.MINUTES, _table_from_enum(SeedingTimeLimits)),
+    )
+    inactive_seeding_time_limit: InactiveSeedingTimeLimitTypes = field(
         convert=DurationConverter(TimeUnit.MINUTES, _table_from_enum(SeedingTimeLimits)),
     )
     seen_complete: datetime = field(

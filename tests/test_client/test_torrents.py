@@ -567,16 +567,26 @@ async def test_limits(client: APIClient):
     dl_limit = 111
     up_limit = 222
     ratio_limit = 2
-    stl = datetime.timedelta(days=1)
+    seeding_time_limit = datetime.timedelta(days=1)
+    inactive_seeding_time_limit = datetime.timedelta(days=30)
 
     sample = make_torrent_single("limits")
     info_hash = sample.hash
 
-    async with temporary_torrents(client, sample):
+    async with temporary_torrents(client, sample) as [info]:
+        has_inactive_seeding_time_limit = hasattr(info, "inactive_seeding_time_limit")
+
         # set dl_limit, up_limit, share_limits
         await client.torrents.set_download_limit((info_hash,), dl_limit)
         await client.torrents.set_upload_limit((info_hash,), up_limit)
-        await client.torrents.set_share_limits((info_hash,), ratio_limit, stl)
+
+        await client.torrents.set_share_limits(
+            (info_hash,),
+            ratio_limit=ratio_limit,
+            seeding_time_limit=seeding_time_limit,
+            inactive_seeding_time_limit=inactive_seeding_time_limit,
+        )
+
         await one_moment()
 
         # check limits
@@ -584,7 +594,10 @@ async def test_limits(client: APIClient):
         assert info.dl_limit == dl_limit
         assert info.up_limit == up_limit
         assert info.ratio_limit == ratio_limit
-        assert info.seeding_time_limit == stl
+        assert info.seeding_time_limit == seeding_time_limit
+
+        if has_inactive_seeding_time_limit:
+            assert info.inactive_seeding_time_limit == inactive_seeding_time_limit
 
         # torrents.download_limit()
         download_limits = await client.torrents.download_limit((info_hash,))

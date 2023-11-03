@@ -1,17 +1,22 @@
+from datetime import timedelta
 from io import BytesIO
-from typing import Any, Dict, Mapping, Optional
+from typing import Any, Dict, Mapping, Optional, Union
 from urllib.parse import parse_qsl
 
 import pytest
 from aiohttp import BodyPartReader, FormData, MultipartReader, hdrs
 
 from aioqbt.api.torrents import AddFormBuilder
+from aioqbt.api.types import InactiveSeedingTimeLimits
+from aioqbt.chrono import Minutes
 
 # Map bool to its string
 _BOOL_STR: Mapping[Any, str] = {
     True: "true",
     False: "false",
 }
+
+_DUMMY_HASH = "0" * 40
 
 
 class StreamWriter:
@@ -94,3 +99,25 @@ async def test_top_queue(value: Optional[bool]) -> None:
     form = AddFormBuilder().add_to_top_of_queue(value).build()
     data = await consume_form(form)
     assert data.get("addToTopOfQueue") == _BOOL_STR.get(value)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        (None, None),
+        (Minutes(1234), "1234"),
+        (timedelta(hours=1), "60"),
+        (timedelta(minutes=1440), "1440"),
+        (timedelta(seconds=30), "0"),
+        (InactiveSeedingTimeLimits.GLOBAL, str(InactiveSeedingTimeLimits.GLOBAL)),
+        (InactiveSeedingTimeLimits.UNLIMITED, str(InactiveSeedingTimeLimits.UNLIMITED)),
+    ],
+)
+async def test_inactive_seeding_time_limit(
+    value: Union[timedelta, Minutes, None],
+    expected: Optional[str],
+) -> None:
+    form = AddFormBuilder().inactive_seeding_time_limit(value).include_url(_DUMMY_HASH).build()
+    data = await consume_form(form)
+    assert data.get("inactiveSeedingTimeLimit") == expected

@@ -13,6 +13,7 @@ from aioqbt.api.types import (
     Category,
     ContentLayout,
     FileEntry,
+    InactiveSeedingTimeLimitTypes,
     InfoFilter,
     RatioLimitTypes,
     SeedingTimeLimitTypes,
@@ -430,6 +431,7 @@ class TorrentsAPI(APIGroup):
         hashes: InfoHashesOrAll,
         ratio_limit: RatioLimitTypes,
         seeding_time_limit: SeedingTimeLimitTypes,
+        inactive_seeding_time_limit: Optional[InactiveSeedingTimeLimitTypes] = None,
     ) -> None:
         """
         Set share limits for torrents.
@@ -438,18 +440,37 @@ class TorrentsAPI(APIGroup):
         :param ratio_limit: A number or :attr:`.RatioLimits.UNSET`.
         :param seeding_time_limit: :class:`~datetime.timedelta`, or
                 :class:`.SeedingTimeLimits` constants.
+        :param inactive_seeding_time_limit: :class:`~datetime.timedelta`, or
+                :class:`.InactiveSeedingTimeLimits` constants.
+                Required since qBittorrent v4.6.0 (API 2.9.2).
         """
         # since API v2.0.1
+        client = self._client()
 
         data = ParamDict.with_hashes_or_all(hashes)
         data.required_float("ratioLimit", ratio_limit)
         data.required_duration("seedingTimeLimit", seeding_time_limit, TimeUnit.MINUTES)
 
-        await self._request_text(
-            "POST",
-            "torrents/setShareLimits",
-            data=data,
-        )
+        if inactive_seeding_time_limit is not None:
+            data.required_duration(
+                "inactiveSeedingTimeLimit", inactive_seeding_time_limit, TimeUnit.MINUTES
+            )
+
+        try:
+            await client.request_text(
+                "POST",
+                "torrents/setShareLimits",
+                data=data,
+            )
+        except exc.BadRequestError as ex:
+            if (
+                inactive_seeding_time_limit is None
+                and APIVersion.compare(client.api_version, (2, 9, 2)) >= 0
+            ):
+                note = "Argument 'inactive_seeding_time_limit' is required since qBittorrent 4.6.0"
+                exc._add_note(ex, note, logger=client._logger)
+
+            raise
 
     async def upload_limit(self, hashes: InfoHashesOrAll) -> Dict[str, int]:
         """
@@ -798,7 +819,6 @@ class TorrentsAPI(APIGroup):
     async def rename_file(self, hash: InfoHash, old_path: str, new_path: str) -> None:
         """available since client 4.3.3 or API 2.7.0"""
 
-    # @since((2, 4, 0))
     async def rename_file(self, hash: InfoHash, *args: Any, **kwargs: Any) -> None:
         """
         Rename a file in torrent.
@@ -965,6 +985,7 @@ class AddFormBuilder:
     _dl_limit: Optional[int] = None
     _ratio_limit: Optional[float] = None
     _seeding_time_limit: Optional[int] = None
+    _inactive_seeding_time_limit: Optional[int] = None
     _auto_tmm: Optional[bool] = None
     _sequential_download: Optional[bool] = None
     _first_last_piece_prio: Optional[bool] = None
@@ -1131,6 +1152,21 @@ class AddFormBuilder:
         return self
 
     @copy_self
+    def inactive_seeding_time_limit(
+        self,
+        inactive_seeding_time_limit: Optional[InactiveSeedingTimeLimitTypes],
+    ) -> Self:
+        """Set ``inactiveSeedingTimeLimit`` value."""
+        # API 2.9.2
+        if inactive_seeding_time_limit is None:
+            self._inactive_seeding_time_limit = None
+        else:
+            self._inactive_seeding_time_limit = int(
+                _convert_duration(inactive_seeding_time_limit, TimeUnit.MINUTES)
+            )
+        return self
+
+    @copy_self
     def auto_tmm(self, auto_tmm: bool) -> Self:
         """Set ``autoTMM`` value."""
         self._auto_tmm = auto_tmm
@@ -1231,6 +1267,9 @@ class AddFormBuilder:
 
         if self._seeding_time_limit is not None:
             form.add_field("seedingTimeLimit", str(self._seeding_time_limit))
+
+        if self._inactive_seeding_time_limit is not None:
+            form.add_field("inactiveSeedingTimeLimit", str(self._inactive_seeding_time_limit))
 
         if self._auto_tmm is not None:
             form.add_field("autoTMM", bool_str(self._auto_tmm))
