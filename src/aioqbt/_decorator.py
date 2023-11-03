@@ -1,7 +1,8 @@
 import copy
 from functools import wraps
-from typing import Any, Callable, TypeVar, overload
+from typing import Any, Callable, Optional, TypeVar, overload
 
+T = TypeVar("T")
 Fn = TypeVar("Fn", bound=Callable[..., Any])
 
 
@@ -15,15 +16,15 @@ def copy_self(fn: Fn) -> Fn:
     pass
 
 
-def copy_self(fn=None):
+def copy_self(fn: Optional[Callable[..., T]] = None) -> Any:
     """
     Copy the first argument before execute the wrapped function
     """
     if fn is None:
-        return copy_self  # pragma: no cover
+        return copy_self
 
     @wraps(fn)
-    def wrapper(self, *args, **kwargs):
+    def wrapper(self: T, *args: Any, **kwargs: Any) -> T:
         return fn(copy.copy(self), *args, **kwargs)
 
     return wrapper

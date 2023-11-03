@@ -2,6 +2,7 @@
 """
 import asyncio
 import logging
+import types
 from abc import ABCMeta
 from ssl import SSLContext
 from typing import (
@@ -11,16 +12,19 @@ from typing import (
     Dict,
     List,
     Mapping,
+    NoReturn,
     Optional,
     Sequence,
     Tuple,
     Type,
     TypeVar,
     Union,
+    overload,
 )
 
 import aiohttp
 from aiohttp.hdrs import RETRY_AFTER as _RETRY_AFTER
+from typing_extensions import Self
 from yarl import URL
 
 from aioqbt import exc
@@ -57,7 +61,7 @@ class APIClient:
         client_version: Optional[ClientVersion] = None,
         api_version: Optional[APIVersion] = None,
         logger: Optional[logging.Logger] = None,
-    ):
+    ) -> None:
         if logger is None:
             logger = logging.getLogger(
                 "%s.%s" % (type(self).__module__, type(self).__qualname__),
@@ -93,13 +97,18 @@ class APIClient:
             502,  # Bad gateway: reverse proxy may be overloaded
         }
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{type(self).__name__} {self.base_url!r}>"
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> Self:
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[types.TracebackType],
+    ) -> None:
         await self.close()
 
     def is_closed(self) -> bool:
@@ -111,7 +120,7 @@ class APIClient:
         # deprecated, prefer `is_closed()` to `closed` property
         return self._http is None
 
-    async def close(self):
+    async def close(self) -> None:
         """
         Close client.
 
@@ -149,7 +158,7 @@ class APIClient:
         max_attempts: int = 3,
         retry_delay: float = 5,
         ssl: Optional[SSLContext] = None,
-        **kwargs,
+        **kwargs: object,
     ) -> aiohttp.ClientResponse:
         """
         Send an HTTP request and return a response object.
@@ -260,7 +269,7 @@ class APIClient:
         error: Exception,
         resp: Optional[aiohttp.ClientResponse],
         resp_body: bytes,
-    ):
+    ) -> NoReturn:
         """
         Handle errors which are not retryable.
         """
@@ -281,7 +290,7 @@ class APIClient:
         self,
         method: str,
         endpoint: str,
-        **kwargs,
+        **kwargs: Any,
     ) -> str:
         """
         Send a request and return a str.
@@ -295,7 +304,7 @@ class APIClient:
         self,
         method: str,
         endpoint: str,
-        **kwargs,
+        **kwargs: Any,
     ) -> Any:
         """
         Send a request and return a JSON-decoded object.
@@ -321,7 +330,7 @@ class APIClient:
         return self._context.get("client_version")
 
     @client_version.setter
-    def client_version(self, version: Optional[ClientVersion]):
+    def client_version(self, version: Optional[ClientVersion]) -> None:
         self._context["client_version"] = version
 
     @property
@@ -330,7 +339,7 @@ class APIClient:
         return self._context.get("api_version")
 
     @api_version.setter
-    def api_version(self, version: Optional[APIVersion]):
+    def api_version(self, version: Optional[APIVersion]) -> None:
         self._context["api_version"] = version
 
     @cached_property
@@ -407,14 +416,14 @@ class APIGroup(metaclass=ABCMeta):
 
         return client
 
-    def _close(self):
+    def _close(self) -> None:
         self._client_ref = None
 
     async def _request(
         self,
         method: str,
         endpoint: str,
-        **kwargs,
+        **kwargs: Any,
     ) -> aiohttp.ClientResponse:
         return await self._client().request(method, endpoint, **kwargs)
 
@@ -422,7 +431,7 @@ class APIGroup(metaclass=ABCMeta):
         self,
         method: str,
         endpoint: str,
-        **kwargs,
+        **kwargs: Any,
     ) -> str:
         return await self._client().request_text(method, endpoint, **kwargs)
 
@@ -430,7 +439,7 @@ class APIGroup(metaclass=ABCMeta):
         self,
         method: str,
         endpoint: str,
-        **kwargs,
+        **kwargs: Any,
     ) -> Any:
         return await self._client().request_json(method, endpoint, **kwargs)
 
@@ -439,7 +448,7 @@ class APIGroup(metaclass=ABCMeta):
         rtype: Type[T],
         method: str,
         endpoint: str,
-        **kwargs,
+        **kwargs: Any,
     ) -> T:
         client = self._client()
         result = await client.request_json(method, endpoint, **kwargs)
@@ -450,7 +459,7 @@ class APIGroup(metaclass=ABCMeta):
         rtype: Type[T],
         method: str,
         endpoint: str,
-        **kwargs,
+        **kwargs: Any,
     ) -> List[T]:
         client = self._client()
         result = await client.request_json(method, endpoint, **kwargs)
@@ -461,8 +470,8 @@ class APIGroup(metaclass=ABCMeta):
         rtype: Type[T],
         method: str,
         endpoint: str,
-        **kwargs,
-    ) -> Dict[Any, T]:
+        **kwargs: Any,
+    ) -> Dict[str, T]:
         client = self._client()
         result = await client.request_json(method, endpoint, **kwargs)
         return client._create_dict(rtype, result)
@@ -553,14 +562,24 @@ def since(version: Union[APIVersion, Tuple[int, int, int]]) -> Callable[[T], T]:
     if not isinstance(version, APIVersion):
         version = APIVersion(*version)
 
-    def decorator(fn):
-        fn._api_version = version
+    def decorator(fn: T) -> T:
+        fn._api_version = version  # type: ignore[attr-defined]
         return fn
 
     return decorator
 
 
-def virtual(fn=None):
+@overload
+def virtual(fn: None) -> Callable[[T], T]:
+    ...
+
+
+@overload
+def virtual(fn: T) -> T:
+    ...
+
+
+def virtual(fn: Any = None) -> Any:
     """
     Mark function not backed by endpoint.
     """

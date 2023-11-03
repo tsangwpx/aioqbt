@@ -1,6 +1,6 @@
 import contextlib
 import socket
-from typing import Awaitable, Callable
+from typing import AsyncIterator, Awaitable, Callable
 
 from aiohttp import web
 
@@ -8,7 +8,7 @@ RequestHandler = Callable[[web.BaseRequest], Awaitable[web.StreamResponse]]
 
 
 @contextlib.asynccontextmanager
-async def temporary_site(runner: web.BaseRunner, port: int = 0):
+async def temporary_site(runner: web.BaseRunner, port: int = 0) -> AsyncIterator[str]:
     # bind a TCP socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.bind(("127.0.0.1", port))
@@ -33,7 +33,7 @@ async def temporary_site(runner: web.BaseRunner, port: int = 0):
 async def temporary_web_server(
     handler: RequestHandler,
     port: int = 0,
-):
+) -> AsyncIterator[str]:
     # start web server
     server = web.Server(handler)
     runner = web.ServerRunner(server)

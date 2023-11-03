@@ -57,7 +57,7 @@ ATTR_TYPE_INFO = "_aioqbt_type_info"
 
 
 class _MissingRepr:
-    def __repr__(self):
+    def __repr__(self) -> str:
         """return ``MISSING`` when format/print"""
         return "MISSING"
 
@@ -90,7 +90,7 @@ class _TypeInfo(Generic[T]):
 
 def _find_type_info(rtype: Type[T]) -> _TypeInfo[T]:
     try:
-        return getattr(rtype, ATTR_TYPE_INFO)
+        return getattr(rtype, ATTR_TYPE_INFO)  # type: ignore[no-any-return]
     except AttributeError:
         pass
 
@@ -274,10 +274,10 @@ class ObjectMapper:
         return result
 
 
-def inspect_raw_data(instance) -> Dict[str, Any]:
+def inspect_raw_data(instance: Any) -> Dict[str, Any]:
     """Return the raw dict from which the instance is created"""
     try:
-        return getattr(instance, ATTR_RAW_DATA)
+        return getattr(instance, ATTR_RAW_DATA)  # type: ignore[no-any-return]
     except AttributeError:
         raise LookupError from None
 
@@ -405,14 +405,14 @@ def declarative(
     ),
 )
 def declarative(
-    cls=None,
+    cls: Optional[Type[T]] = None,
     *,
-    init=True,
-    repr=True,
-    eq=True,
-    unsafe_hash=False,
-    frozen=False,
-):
+    init: bool = True,
+    repr: bool = True,
+    eq: bool = True,
+    unsafe_hash: bool = False,
+    frozen: bool = False,
+) -> Union[Type[T], Callable[[Type[T]], Type[T]]]:
     """
     Decorate a class to behave similarly to dataclass
     """
@@ -492,7 +492,7 @@ def _eq_fn(
     fields: _FieldSequence,
     *,
     globals: Optional[Dict[str, object]] = None,
-):
+) -> Callable[..., str]:
     locals: Dict[str, object] = {
         "MISSING": dataclasses.MISSING,
     }
@@ -513,7 +513,7 @@ def _hash_fn(
     fields: _FieldSequence,
     *,
     globals: Optional[Dict[str, object]] = None,
-):
+) -> Callable[..., int]:
     locals: Dict[str, object] = {
         "MISSING": dataclasses.MISSING,
     }
@@ -529,7 +529,7 @@ def _repr_fn(
     fields: _FieldSequence,
     *,
     globals: Optional[Dict[str, object]] = None,
-):
+) -> Callable[..., str]:
     locals: Dict[str, object] = {
         "MISSING_REPR": MISSING_REPR,
     }
@@ -566,7 +566,7 @@ def _create_fn(
     *,
     globals: Optional[Dict[str, object]] = None,
     locals: Optional[MutableMapping[str, object]] = None,
-    return_type=dataclasses.MISSING,
+    return_type: Any = dataclasses.MISSING,
 ) -> Callable[..., Any]:
     if locals is None:
         locals = {}
@@ -588,4 +588,5 @@ def _create_fn(
 
     ns: Dict[str, Any] = {}
     exec(source, globals, ns)
-    return ns["_create_fn"](**locals)
+    fn: Callable[..., T] = ns["_create_fn"](**locals)
+    return fn

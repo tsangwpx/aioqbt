@@ -27,7 +27,7 @@ class PieceHasher:
         self._hasher = sha1()
         self._hasher_rem = piece_length
 
-    def _consume(self, data: bytes, final: bool):
+    def _consume(self, data: bytes, final: bool) -> None:
         if self._finalized:
             raise ValueError("finalize() has been called")
 
@@ -53,19 +53,19 @@ class PieceHasher:
         if self._hasher_rem < self._piece_length:
             self._pieces.append(self._hasher.digest())
 
-    def update(self, data: bytes):
+    def update(self, data: bytes) -> None:
         self._consume(data, False)
 
-    def finalize(self, data: bytes = b""):
+    def finalize(self, data: bytes = b"") -> List[bytes]:
         self._consume(data, True)
         return self._pieces
 
     @property
-    def pieces(self):
+    def pieces(self) -> List[bytes]:
         return self._pieces
 
     @property
-    def piece_length(self):
+    def piece_length(self) -> int:
         return self._piece_length
 
 

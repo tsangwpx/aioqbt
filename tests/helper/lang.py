@@ -4,10 +4,12 @@ import logging
 import random
 import sys
 import time
-from typing import Awaitable, Callable, Optional, Tuple, Type, Union
+from typing import Any, Awaitable, Callable, Optional, Tuple, Type, TypeVar, Union, overload
+
+from typing_extensions import ParamSpec
 
 
-async def one_moment(duration: float = 1 / 1000):
+async def one_moment(duration: float = 1 / 1000) -> None:
     """Pause for a moment"""
     await asyncio.sleep(duration)
 
@@ -49,15 +51,45 @@ else:
         return r.getrandbits(n * 8).to_bytes(n, "little")
 
 
+Fn = TypeVar("Fn", bound=Callable[..., Any])
+T = TypeVar("T")
+P = ParamSpec("P")
+
+
+@overload
 def retry_assert(
-    fn=None,
+    *,
+    max_attempts: int = ...,
+    pause: Optional[float] = ...,
+    delay: Optional[float] = ...,
+    exc_types: Union[Type[BaseException], Tuple[Type[BaseException], ...], None] = ...,
+    logger: Optional[logging.Logger] = ...,
+) -> Callable[[Fn], Fn]:
+    pass
+
+
+@overload
+def retry_assert(
+    fn: Fn,
+    *,
+    max_attempts: int = ...,
+    pause: Optional[float] = ...,
+    delay: Optional[float] = ...,
+    exc_types: Union[Type[BaseException], Tuple[Type[BaseException], ...], None] = ...,
+    logger: Optional[logging.Logger] = ...,
+) -> Fn:
+    pass
+
+
+def retry_assert(
+    fn: Optional[Callable[P, Awaitable[T]]] = None,
     *,
     max_attempts: int = 4,
     pause: Optional[float] = None,
     delay: Optional[float] = None,
     exc_types: Union[Type[BaseException], Tuple[Type[BaseException], ...], None] = None,
     logger: Optional[logging.Logger] = None,
-):
+) -> Union[Callable[[Fn], Fn], Callable[P, Awaitable[T]]]:
     """
     Retry a coroutine if AssertionError raise.
 
@@ -73,7 +105,7 @@ def retry_assert(
         raise ValueError("max_attempts <= 0")
 
     if fn is None:
-        return functools.partial(
+        return functools.partial(  # type: ignore[return-value]
             retry_assert,
             pause=pause,
             delay=delay,
@@ -92,7 +124,7 @@ def retry_assert(
         exc_types = AssertionError
 
     @functools.wraps(fn)
-    async def wrapper(*args, **kwargs):
+    async def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
         assert pause is not None
         assert delay is not None
 

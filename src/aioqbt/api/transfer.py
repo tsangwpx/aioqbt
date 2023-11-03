@@ -8,7 +8,7 @@ from aioqbt.version import APIVersion
 __all__ = ("TransferAPI",)
 
 
-def _check_1024(name: str, num: int):
+def _check_1024(name: str, num: int) -> None:
     """num must be a multiple of 1024"""
     if num % 1024 != 0:
         raise ValueError(f"{name!r} must be a multiple of 1024")
@@ -34,13 +34,13 @@ class TransferAPI(APIGroup):
         )
         return int(res)
 
-    async def toggle_speed_limits_mode(self):
+    async def toggle_speed_limits_mode(self) -> None:
         await self._request_text(
             "POST",
             "transfer/toggleSpeedLimitsMode",
         )
 
-    async def set_speed_limits_mode(self, mode: int):
+    async def set_speed_limits_mode(self, mode: int) -> None:
         """
         Change ``speed_limits_mode``.
 
@@ -61,7 +61,7 @@ class TransferAPI(APIGroup):
             data=data,
         )
 
-    async def _set_speed_limits_mode_polyfill(self, mode: int):
+    async def _set_speed_limits_mode_polyfill(self, mode: int) -> None:
         """
         This is a polyfill that ``speed_limits_mode`` is queried and
         toggled if needed.
@@ -81,7 +81,7 @@ class TransferAPI(APIGroup):
         )
         return int(res)
 
-    async def set_download_limit(self, limit: int):
+    async def set_download_limit(self, limit: int) -> None:
         """Set download limit (byte/second)"""
         _check_1024("limit", limit)
 
@@ -102,7 +102,7 @@ class TransferAPI(APIGroup):
         )
         return int(res)
 
-    async def set_upload_limit(self, limit: int):
+    async def set_upload_limit(self, limit: int) -> None:
         """Set upload limit (byte/second)"""
         _check_1024("limit", limit)
 
@@ -119,7 +119,7 @@ class TransferAPI(APIGroup):
     async def ban_peers(
         self,
         peers: Iterable[Tuple[str, int]],
-    ):
+    ) -> None:
         """
         Ban peers.
 

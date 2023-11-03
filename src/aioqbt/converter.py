@@ -1,6 +1,6 @@
 import sys
 from abc import ABCMeta, abstractmethod
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, tzinfo
 from enum import Enum
 from types import MappingProxyType
 from typing import Any, Callable, Mapping, Optional, Type, TypeVar
@@ -40,7 +40,7 @@ class NegativeMode(StrEnum):
     CONVERT = "convert"  # convert negative values as well
 
 
-def _find_timezone():
+def _find_timezone() -> Optional[tzinfo]:
     """Find local timezone"""
     # https://stackoverflow.com/a/39079819/1692260
     return datetime.now(timezone.utc).astimezone().tzinfo

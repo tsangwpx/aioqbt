@@ -1,3 +1,5 @@
+from typing import Any, AsyncIterator, Dict, Iterable
+
 import pytest
 import pytest_asyncio
 from helper.service import LoginInfo, login_session_context, parse_login_env, server_process
@@ -6,7 +8,7 @@ from aioqbt.client import APIClient
 
 
 @pytest.fixture(scope="session")
-def mock_login(tmp_path_factory):
+def mock_login(tmp_path_factory: pytest.TempPathFactory) -> Iterable[LoginInfo]:
     login = parse_login_env("MOCK_SERVER")
     if login is not None:
         yield login
@@ -22,13 +24,13 @@ def mock_login(tmp_path_factory):
 
 
 @pytest_asyncio.fixture
-async def client(mock_login: LoginInfo):
+async def client(mock_login: LoginInfo) -> AsyncIterator[APIClient]:
     async with login_session_context(mock_login) as client:
         yield client
 
 
 @pytest_asyncio.fixture
-async def temp_prefs(client: APIClient):
+async def temp_prefs(client: APIClient) -> AsyncIterator[Dict[str, Any]]:
     """restore preferences after change"""
     original = await client.app.preferences()
 

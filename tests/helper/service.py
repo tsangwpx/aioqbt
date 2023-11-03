@@ -6,8 +6,9 @@ import subprocess
 import sys
 import time
 from dataclasses import dataclass, field
+from http.cookies import Morsel
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any, AsyncIterator, Iterator, List, Optional, Tuple
 
 import aiohttp
 
@@ -47,14 +48,14 @@ def parse_login(spec: str) -> LoginInfo:
     )
 
 
-def parse_login_env(name) -> Optional[LoginInfo]:
+def parse_login_env(name: str) -> Optional[LoginInfo]:
     spec = os.environ.get(name)
     if spec is None:
         return None
     return parse_login(spec)
 
 
-def _wait_port_open(port: int, count: int, pause: float = 1):
+def _wait_port_open(port: int, count: int, pause: float = 1) -> None:
     # connect to a port repeatly until it is open or maximum number of attempts is reached
     assert count >= 1, count
 
@@ -83,7 +84,7 @@ def server_process(
     profile_path: Path,
     port: Optional[int] = None,
     logger: Optional[logging.Logger] = None,
-):
+) -> Iterator[Tuple[str, int]]:
     if sys.platform.startswith("win"):
         raise RuntimeError("Server process is not supported on platform")
 
@@ -114,7 +115,7 @@ def server_process(
         bufsize=0,
     )
 
-    def log_stdout_stderr(stdout: Optional[bytes], stderr: Optional[bytes]):
+    def log_stdout_stderr(stdout: Optional[bytes], stderr: Optional[bytes]) -> None:
         """Log stdout and stderr"""
         ts = time.time()
 
@@ -129,7 +130,7 @@ def server_process(
         for line in stderr.splitlines():
             logger.error("server stderr %.3f: %r", ts, line)
 
-    def do_communicate(input=None, timeout=None):
+    def do_communicate(input: Optional[bytes] = None, timeout: Optional[float] = None) -> None:
         """Call communicate and send outputs to logger"""
 
         nonlocal communication_done
@@ -172,7 +173,7 @@ def server_process(
 
 
 @contextlib.asynccontextmanager
-async def login_session_context(login: LoginInfo):
+async def login_session_context(login: LoginInfo) -> AsyncIterator[APIClient]:
     """
     Save/restore cookies from login and yield APIClient
     """
@@ -206,7 +207,7 @@ async def login_session_context(login: LoginInfo):
 
     cookies = []
     for item in list(http.cookie_jar):
-        assert isinstance(item, aiohttp.cookiejar.Morsel)
+        assert isinstance(item, Morsel)
         cookies.append((item.key, item))
 
     login.cookies[:] = cookies

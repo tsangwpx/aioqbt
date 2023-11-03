@@ -1,7 +1,7 @@
 import copy
 import datetime
 from pathlib import PurePath
-from typing import Callable
+from typing import Callable, List
 
 import pytest
 from helper.lang import one_moment, retry_assert
@@ -168,7 +168,7 @@ async def test_add_content_layout(
     name: str,
     layout: ContentLayout,
     make_torrent: Callable[[str], TorrentData],
-    parts_count: str,
+    parts_count: int,
 ):
     if APIVersion.compare(client.api_version, (2, 7, 0)) < 0:
         pytest.skip("API v2.7.0")
@@ -645,7 +645,7 @@ async def test_queueing(client: APIClient):
     async with temporary_torrents(client, sample1, sample2, sample3):
         h1, h2, h3 = hashes
 
-        async def queued_hashes():
+        async def queued_hashes() -> List[str]:
             torrents = await client.torrents.info(hashes=hashes)
             torrents.sort(key=lambda s: s.priority)
             return [s.hash for s in torrents]
@@ -682,7 +682,7 @@ async def test_file_priorities(client: APIClient):
     sample = make_torrent_files("file_priorities")
     info_hash = sample.hash
 
-    async def file_priorities():
+    async def file_priorities() -> List[int]:
         return [s.priority for s in await client.torrents.files(info_hash)]
 
     async with temporary_torrents(client, sample):

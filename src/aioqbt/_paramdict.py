@@ -10,10 +10,13 @@ from typing import (
     Iterator,
     Mapping,
     MutableMapping,
+    NoReturn,
     Optional,
     TypeVar,
     Union,
 )
+
+from typing_extensions import Self
 
 from aioqbt.bittorrent import InfoHash, InfoHashes, InfoHashesOrAll, get_info_hash
 from aioqbt.chrono import TimeUnit
@@ -50,7 +53,7 @@ def _param_name(key: str, param: Optional[str]) -> str:
         return param
 
 
-def _missing():
+def _missing() -> NoReturn:
     raise AssertionError
 
 
@@ -75,10 +78,10 @@ class ParamDict(MutableMapping[str, str]):
             for k, v in list(data.items()):
                 self.put(k, v)
 
-    def __setitem__(self, key: str, value: str):
+    def __setitem__(self, key: str, value: str) -> None:
         self._data[key] = value
 
-    def __delitem__(self, key: str):
+    def __delitem__(self, key: str) -> None:
         del self._data[key]
 
     def __getitem__(self, key: str) -> str:
@@ -90,13 +93,13 @@ class ParamDict(MutableMapping[str, str]):
     def __iter__(self) -> Iterator[str]:
         return iter(self._data)
 
-    def __deepcopy__(self, memo=None):
+    def __deepcopy__(self, memo: Optional[Dict[int, Any]] = None) -> Self:
         return type(self)(self)
 
     __copy__ = __deepcopy__
 
     @classmethod
-    def _missing_param(cls, key: str, param: Optional[str]):
+    def _missing_param(cls, key: str, param: Optional[str]) -> TypeError:
         return TypeError(f"{_param_name(key, param)!r} is required")
 
     def to_dict(self) -> Dict[str, str]:
@@ -110,7 +113,7 @@ class ParamDict(MutableMapping[str, str]):
         optional: bool,
         prepare: Optional[PrepareFn[Any]] = None,
         default: Any = _missing,
-    ):
+    ) -> None:
         """
         Associate a key with a value
 
@@ -163,31 +166,35 @@ class ParamDict(MutableMapping[str, str]):
         optional: bool = False,
         prepare: Optional[PrepareFn[Any]] = None,
         default: Any = _missing,
-    ):
+    ) -> None:
         self._put(key, param, value, optional, prepare, default)
 
-    def optional_str(self, key: str, value: Optional[str], *, param: Optional[str] = None):
+    def optional_str(self, key: str, value: Optional[str], *, param: Optional[str] = None) -> None:
         self._put(key, param, value, True, str)
 
-    def required_str(self, key: str, value: str, *, param: Optional[str] = None):
+    def required_str(self, key: str, value: str, *, param: Optional[str] = None) -> None:
         self._put(key, param, value, False, str)
 
-    def optional_int(self, key: str, value: Optional[int], *, param: Optional[str] = None):
+    def optional_int(self, key: str, value: Optional[int], *, param: Optional[str] = None) -> None:
         self._put(key, param, value, True, int)
 
-    def required_int(self, key: str, value: int, *, param: Optional[str] = None):
+    def required_int(self, key: str, value: int, *, param: Optional[str] = None) -> None:
         self._put(key, param, value, False, int)
 
-    def optional_float(self, key: str, value: Optional[float], *, param: Optional[str] = None):
+    def optional_float(
+        self, key: str, value: Optional[float], *, param: Optional[str] = None
+    ) -> None:
         self._put(key, param, value, True, float)
 
-    def required_float(self, key: str, value: float, *, param: Optional[str] = None):
+    def required_float(self, key: str, value: float, *, param: Optional[str] = None) -> None:
         self._put(key, param, value, False, float)
 
-    def optional_bool(self, key: str, value: Optional[bool], *, param: Optional[str] = None):
+    def optional_bool(
+        self, key: str, value: Optional[bool], *, param: Optional[str] = None
+    ) -> None:
         self._put(key, param, value, True, _prepare_bool)
 
-    def required_bool(self, key: str, value: bool, *, param: Optional[str] = None):
+    def required_bool(self, key: str, value: bool, *, param: Optional[str] = None) -> None:
         self._put(key, param, value, False, _prepare_bool)
 
     def _put_duration(
@@ -197,7 +204,7 @@ class ParamDict(MutableMapping[str, str]):
         value: Union[timedelta, int, float, None],
         unit: TimeUnit,
         optional: bool,
-    ):
+    ) -> None:
         if isinstance(value, timedelta):
             value = unit.from_seconds(value.total_seconds())
 
@@ -213,7 +220,7 @@ class ParamDict(MutableMapping[str, str]):
         unit: TimeUnit,
         *,
         param: Optional[str] = None,
-    ):
+    ) -> None:
         self._put_duration(key, param, value, unit, False)
 
     def optional_duration(
@@ -223,7 +230,7 @@ class ParamDict(MutableMapping[str, str]):
         unit: TimeUnit,
         *,
         param: Optional[str] = None,
-    ):
+    ) -> None:
         self._put_duration(key, param, value, unit, True)
 
     def required_path(
@@ -232,7 +239,7 @@ class ParamDict(MutableMapping[str, str]):
         value: StrPath,
         *,
         param: Optional[str] = None,
-    ):
+    ) -> None:
         self._put(key, param, value, False, _prepare_path)
 
     def optional_path(
@@ -241,7 +248,7 @@ class ParamDict(MutableMapping[str, str]):
         value: Optional[StrPath],
         *,
         param: Optional[str] = None,
-    ):
+    ) -> None:
         self._put(key, param, value, True, _prepare_path)
 
     def _put_list(
@@ -253,7 +260,7 @@ class ParamDict(MutableMapping[str, str]):
         optional: bool,
         prepare: Optional[PrepareFn[T]],
         nonempty: bool,
-    ):
+    ) -> None:
         if value is None:
             if optional:
                 return
@@ -279,7 +286,7 @@ class ParamDict(MutableMapping[str, str]):
         param: Optional[str] = None,
         prepare: Optional[PrepareFn[T]] = None,
         nonempty: bool = False,
-    ):
+    ) -> None:
         self._put_list(key, value, sep, param, False, prepare, nonempty)
 
     def optional_list(
@@ -291,7 +298,7 @@ class ParamDict(MutableMapping[str, str]):
         param: Optional[str] = None,
         prepare: Optional[PrepareFn[T]] = None,
         nonempty: bool = False,
-    ):
+    ) -> None:
         self._put_list(key, value, sep, param, True, prepare, nonempty)
 
     @classmethod
@@ -301,7 +308,7 @@ class ParamDict(MutableMapping[str, str]):
         *,
         key: Optional[str] = None,
         param: Optional[str] = None,
-    ):
+    ) -> Self:
         if key is None:
             key = "hash"
 
@@ -317,7 +324,7 @@ class ParamDict(MutableMapping[str, str]):
         key: Optional[str] = None,
         param: Optional[str] = None,
         nonempty: bool = False,
-    ):
+    ) -> Self:
         if key is None:
             key = "hashes"
 
@@ -333,7 +340,7 @@ class ParamDict(MutableMapping[str, str]):
         key: Optional[str] = None,
         param: Optional[str] = None,
         nonempty: bool = False,
-    ):
+    ) -> Self:
         if key is None:
             key = "hashes"
 

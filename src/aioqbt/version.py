@@ -61,12 +61,12 @@ class ClientVersion:
         """Status string."""
         return self._status
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, ClientVersion):
             return self._key == other._key
         return NotImplemented
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self._key)
 
     def __lt__(self, other: Any) -> bool:
@@ -74,7 +74,7 @@ class ClientVersion:
             return self._key < other._key
         return NotImplemented
 
-    def __str__(self):
+    def __str__(self) -> str:
         result = f"{self.major:d}.{self.minor:d}.{self.patch:d}"
 
         if self.build != 0:
@@ -159,7 +159,7 @@ class APIVersion(NamedTuple):
 
         return cls(int(s1), int(s2), int(s3 or 0))
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.major}.{self.minor}.{self.release}"
 
     @classmethod
@@ -195,22 +195,22 @@ class APIVersion(NamedTuple):
 
 
 class Comparable(Protocol):
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         pass
 
-    def __ne__(self, other):
+    def __ne__(self, other: Any) -> bool:
         pass
 
-    def __lt__(self, other):
+    def __lt__(self, other: Any) -> bool:
         pass
 
-    def __le__(self, other):
+    def __le__(self, other: Any) -> bool:
         pass
 
-    def __gt__(self, other):
+    def __gt__(self, other: Any) -> bool:
         pass
 
-    def __ge__(self, other):
+    def __ge__(self, other: Any) -> bool:
         pass
 
 
@@ -224,7 +224,7 @@ def version_satisfy(version: Optional[Comparable], minimum: Comparable) -> bool:
     return version is None or version >= minimum
 
 
-def version_check(version: Optional[Comparable], minimum: Comparable):
+def version_check(version: Optional[Comparable], minimum: Comparable) -> None:
     """
     Compare version with minimum requirement and raise if violated.
 
@@ -235,7 +235,7 @@ def version_check(version: Optional[Comparable], minimum: Comparable):
         raise VersionError(f"Version {minimum} is required but {version} is found")
 
 
-def param_version_check(param, version: Optional[Comparable], minimum: Comparable):
+def param_version_check(param: str, version: Optional[Comparable], minimum: Comparable) -> None:
     if not version_satisfy(version, minimum):
         if type(minimum) is tuple:
             minimum = type(version)(*minimum)  # type: ignore

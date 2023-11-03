@@ -1,10 +1,8 @@
 """
 Types utilized and returned by API methods.
 """
-import enum
 from datetime import datetime, timedelta
-from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
+from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union, overload
 
 from typing_extensions import TypedDict
 
@@ -160,12 +158,27 @@ _DATETIME_NONE_TABLE = dict.fromkeys(
     )
 )
 _DURATION_NONE_TABLE = dict.fromkeys((-1,))
-_E = TypeVar("_E", bound=enum.Enum)
+_IE = TypeVar("_IE", bound=IntEnum)
+_SE = TypeVar("_SE", bound=StrEnum)
 
 
-def _table_from_enum(enum_type: Type[_E]) -> Dict[int, _E]:
-    assert issubclass(enum_type, Enum) and issubclass(enum_type, int)
-    return {int(s): s for s in enum_type.__members__.values()}
+@overload
+def _table_from_enum(cls: Type[_IE]) -> Dict[int, _IE]:
+    ...
+
+
+@overload
+def _table_from_enum(cls: Type[_SE]) -> Dict[str, _SE]:
+    ...
+
+
+def _table_from_enum(cls: Union[Type[IntEnum], Type[StrEnum]]) -> Dict[Any, Any]:
+    if issubclass(cls, IntEnum):
+        return {int(s): s for s in cls.__members__.values()}
+    elif issubclass(cls, StrEnum):
+        return {str(s): s for s in cls.__members__.values()}
+    else:
+        raise AssertionError("unreachable")
 
 
 # define dataclasses after enums
@@ -521,7 +534,7 @@ class TorrentInfo:
 
     total_size: int
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{type(self).__name__} {self.hash} {self.state.value} {self.name!r}>"
 
 
@@ -595,7 +608,7 @@ class TorrentProperties:
     download_path: str  # v2.8.4
     comment: str
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         cls_name = type(self).__name__
 
         name = getattr(self, "name", None)
@@ -624,7 +637,7 @@ class Tracker:
     num_downloaded: int
     msg: str
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         cls_name = type(self).__name__
         title = self.url or ""
         msg = f" {self.msg!r}" if self.msg else ""
@@ -634,7 +647,7 @@ class Tracker:
         else:
             return f"<{cls_name} {title!r}{msg}>"
 
-    def is_special(self):
+    def is_special(self) -> bool:
         url = self.url or ""
         return url.startswith("** [") and url.endswith("] **")
 

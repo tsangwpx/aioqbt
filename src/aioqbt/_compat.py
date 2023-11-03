@@ -1,8 +1,9 @@
 import sys
 from enum import Enum
-from typing import Any, Callable, Optional, Type, TypeVar, overload
+from typing import Callable, Generic, Optional, Type, TypeVar, Union, overload
 
 T = TypeVar("T")
+R = TypeVar("R")
 E = TypeVar("E", bound=Enum)
 
 
@@ -17,8 +18,8 @@ def repr_enum(cls: Type[E]) -> Type[E]:
 
 
 def repr_enum(
-    cls=None,
-):
+    cls: Optional[Type[E]] = None,
+) -> Union[Callable[[Type[E]], Type[E]], Type[E]]:
     """
     Preserve str() and format() behavior of enum types from underlying
     data type.
@@ -50,17 +51,17 @@ def repr_enum(
         # assume that the method is set by EnumMeta
         # even though the method may be explicitly defined in mixins
 
-        if cls.__format__ is enum_type.__format__:
-            cls.__format__ = member_type.__format__  # type: ignore
+        if cls.__format__ is enum_type.__format__:  # type: ignore[comparison-overlap]
+            cls.__format__ = member_type.__format__  # type: ignore[method-assign]
 
-        if cls.__str__ is enum_type.__str__:
+        if cls.__str__ is enum_type.__str__:  # type: ignore[comparison-overlap]
             # object.__str__ delegate to member_type.__repr__
             if member_type.__str__ is object.__str__:
                 str_method = member_type.__repr__
             else:
                 str_method = member_type.__str__
 
-            cls.__str__ = str_method  # type: ignore
+            cls.__str__ = str_method  # type: ignore[method-assign]
 
         return cls
 
@@ -92,17 +93,17 @@ if sys.version_info >= (3, 8):
     assert True, cached_property
 else:  # pragma: no cover
 
-    class cached_property:
+    class cached_property(Generic[T, R]):
         """
         Modified from the functools.cached_property implementation on Python 3.8
         """
 
-        def __init__(self, func):
-            self.func: Callable[..., Any] = func
+        def __init__(self, func: Callable[[T], R]) -> None:
+            self.func = func
             self.name: Optional[str] = None
             self.__doc__ = func.__doc__
 
-        def __set_name__(self, owner, name):
+        def __set_name__(self, owner: T, name: str) -> None:
             if self.name is None:
                 self.name = name
             elif self.name != name:
@@ -111,7 +112,27 @@ else:  # pragma: no cover
                     f" ({self.name!r} and {name!r})"
                 )
 
-        def __get__(self, instance, owner=None):
+        @overload
+        def __get__(
+            self,
+            instance: None,
+            owner: Optional[Type[T]] = ...,
+        ) -> "cached_property[T, R]":
+            ...
+
+        @overload
+        def __get__(
+            self,
+            instance: T,
+            owner: Optional[Type[T]] = ...,
+        ) -> R:
+            ...
+
+        def __get__(
+            self,
+            instance: Optional[T],
+            owner: Optional[Type[T]] = None,
+        ) -> Union["cached_property[T, R]", R]:
             if instance is None:
                 return self
 
@@ -130,4 +151,4 @@ else:  # pragma: no cover
             except KeyError:
                 value = self.func(instance)
                 cache[self.name] = value
-            return value
+            return value  # type: ignore[no-any-return]

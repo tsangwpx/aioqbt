@@ -1,5 +1,5 @@
 import operator
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Set, Union
 
 BencodeTypes = Union[int, bytes, str, Dict[str, Any], List[Any]]
 
@@ -9,7 +9,7 @@ class BencodeError(Exception):
 
 
 def dumps(obj: BencodeTypes, encoding: str = "utf-8") -> bytes:
-    def iterencode(o):
+    def iterencode(o: Any) -> Any:
         if isinstance(o, int):
             yield b"i%de" % o
         elif isinstance(o, (bytes, str)):
@@ -25,7 +25,7 @@ def dumps(obj: BencodeTypes, encoding: str = "utf-8") -> bytes:
         elif isinstance(o, dict):
             yield b"d"
             pairs = []
-            seen = set()
+            seen: Set[bytes] = set()
 
             for k, v in o.items():
                 if isinstance(k, str):

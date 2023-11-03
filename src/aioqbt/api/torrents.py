@@ -34,7 +34,7 @@ __all__ = (
 )
 
 
-def _check_iterable_except_str(param: str, value: Iterable[Any]):
+def _check_iterable_except_str(param: str, value: Iterable[Any]) -> None:
     """Explicitly reject ``str`` as ``Iterable[str]``"""
     if isinstance(value, str):  # pragma: no cover
         raise ValueError(f"{param!r} refused str as iterable")
@@ -169,7 +169,7 @@ class TorrentsAPI(APIGroup):
         * :attr:`.PieceState.DOWNLOADED`
 
         """
-        return await self._request_json(
+        return await self._request_json(  # type: ignore[no-any-return]
             "GET",
             "torrents/pieceStates",
             params=ParamDict.with_hash(hash),
@@ -180,13 +180,13 @@ class TorrentsAPI(APIGroup):
         A list of piece hashes in a torrent.
         """
 
-        return await self._request_json(
+        return await self._request_json(  # type: ignore[no-any-return]
             "GET",
             "torrents/pieceHashes",
             params=ParamDict.with_hash(hash),
         )
 
-    async def pause(self, hashes: InfoHashesOrAll):
+    async def pause(self, hashes: InfoHashesOrAll) -> None:
         """
         Pause torrents.
 
@@ -201,7 +201,7 @@ class TorrentsAPI(APIGroup):
             data=ParamDict.with_hashes_or_all(hashes),
         )
 
-    async def resume(self, hashes: InfoHashesOrAll):
+    async def resume(self, hashes: InfoHashesOrAll) -> None:
         """
         Resume torrents.
 
@@ -216,7 +216,7 @@ class TorrentsAPI(APIGroup):
             data=ParamDict.with_hashes_or_all(hashes),
         )
 
-    async def delete(self, hashes: InfoHashesOrAll, delete_files: bool):
+    async def delete(self, hashes: InfoHashesOrAll, delete_files: bool) -> None:
         """
         Delete torrents.
 
@@ -238,7 +238,7 @@ class TorrentsAPI(APIGroup):
             data=data,
         )
 
-    async def recheck(self, hashes: InfoHashesOrAll):
+    async def recheck(self, hashes: InfoHashesOrAll) -> None:
         """Recheck torrents."""
 
         await self._request_text(
@@ -247,7 +247,7 @@ class TorrentsAPI(APIGroup):
             data=ParamDict.with_hashes_or_all(hashes),
         )
 
-    async def reannounce(self, hashes: InfoHashesOrAll):
+    async def reannounce(self, hashes: InfoHashesOrAll) -> None:
         """Reannounce torrents."""
 
         # since API v2.0.2
@@ -258,7 +258,7 @@ class TorrentsAPI(APIGroup):
             data=ParamDict.with_hashes_or_all(hashes),
         )
 
-    async def add(self, form: aiohttp.FormData):
+    async def add(self, form: aiohttp.FormData) -> None:
         """
         Add torrents by URLs, info hashes, and/or file blobs.
 
@@ -287,7 +287,7 @@ class TorrentsAPI(APIGroup):
                 ex.message = body.decode("utf-8")
                 raise ex
 
-    async def add_trackers(self, hash: InfoHash, trackers: Iterable[str]):
+    async def add_trackers(self, hash: InfoHash, trackers: Iterable[str]) -> None:
         _check_iterable_except_str("trackers", trackers)
 
         data = ParamDict.with_hash(hash)
@@ -305,7 +305,7 @@ class TorrentsAPI(APIGroup):
         hash: InfoHash,
         orig_url: str,
         new_url: str,
-    ):
+    ) -> None:
         data = ParamDict.with_hash(hash)
         data.required_str("origUrl", orig_url)
         data.required_str("newUrl", new_url)
@@ -316,7 +316,7 @@ class TorrentsAPI(APIGroup):
             data=data,
         )
 
-    async def remove_trackers(self, hash: InfoHash, urls: Iterable[str]):
+    async def remove_trackers(self, hash: InfoHash, urls: Iterable[str]) -> None:
         _check_iterable_except_str("urls", urls)
 
         # Since API v2.2.0
@@ -329,7 +329,7 @@ class TorrentsAPI(APIGroup):
             data=data,
         )
 
-    async def add_peers(self, hashes: InfoHashes, peers: Iterable[str]):
+    async def add_peers(self, hashes: InfoHashes, peers: Iterable[str]) -> None:
         _check_iterable_except_str("peers", peers)
 
         data = ParamDict.with_hashes(hashes)
@@ -341,35 +341,35 @@ class TorrentsAPI(APIGroup):
             data=data,
         )
 
-    async def top_prio(self, hashes: InfoHashesOrAll):
+    async def top_prio(self, hashes: InfoHashesOrAll) -> None:
         await self._request_text(
             "POST",
             "torrents/topPrio",
             data=ParamDict.with_hashes_or_all(hashes),
         )
 
-    async def bottom_prio(self, hashes: InfoHashesOrAll):
+    async def bottom_prio(self, hashes: InfoHashesOrAll) -> None:
         await self._request_text(
             "POST",
             "torrents/bottomPrio",
             data=ParamDict.with_hashes_or_all(hashes),
         )
 
-    async def increase_prio(self, hashes: InfoHashesOrAll):
+    async def increase_prio(self, hashes: InfoHashesOrAll) -> None:
         await self._request_text(
             "POST",
             "torrents/increasePrio",
             data=ParamDict.with_hashes_or_all(hashes),
         )
 
-    async def decrease_prio(self, hashes: InfoHashesOrAll):
+    async def decrease_prio(self, hashes: InfoHashesOrAll) -> None:
         await self._request_text(
             "POST",
             "torrents/decreasePrio",
             data=ParamDict.with_hashes_or_all(hashes),
         )
 
-    async def file_prio(self, hash: InfoHash, id: Iterable[int], priority: int):
+    async def file_prio(self, hash: InfoHash, id: Iterable[int], priority: int) -> None:
         """
         Prioritize files in a torrent.
 
@@ -406,9 +406,9 @@ class TorrentsAPI(APIGroup):
             "torrents/downloadLimit",
             params=params,
         )
-        return result
+        return result  # type: ignore[no-any-return]
 
-    async def set_download_limit(self, hashes: InfoHashesOrAll, limit: int):
+    async def set_download_limit(self, hashes: InfoHashesOrAll, limit: int) -> None:
         """
         Update torrent download limits.
 
@@ -430,7 +430,7 @@ class TorrentsAPI(APIGroup):
         hashes: InfoHashesOrAll,
         ratio_limit: RatioLimitTypes,
         seeding_time_limit: SeedingTimeLimitTypes,
-    ):
+    ) -> None:
         """
         Set share limits for torrents.
 
@@ -462,13 +462,13 @@ class TorrentsAPI(APIGroup):
         """
         params = ParamDict.with_hashes_or_all(hashes)
 
-        return await self._request_json(
+        return await self._request_json(  # type: ignore[no-any-return]
             "GET",
             "torrents/uploadLimit",
             params=params,
         )
 
-    async def set_upload_limit(self, hashes: InfoHashesOrAll, limit: int):
+    async def set_upload_limit(self, hashes: InfoHashesOrAll, limit: int) -> None:
         """
         Update torrent upload limits.
 
@@ -488,7 +488,7 @@ class TorrentsAPI(APIGroup):
         self,
         hashes: InfoHashesOrAll,
         location: StrPath,
-    ):
+    ) -> None:
         """
         Change location (save path) for torrents.
 
@@ -513,7 +513,7 @@ class TorrentsAPI(APIGroup):
         self,
         id: InfoHashesOrAll,
         path: StrPath,
-    ):
+    ) -> None:
         """
         Change save path (location) for torrents.
 
@@ -541,7 +541,7 @@ class TorrentsAPI(APIGroup):
         self,
         id: InfoHashesOrAll,
         path: StrPath,
-    ):
+    ) -> None:
         """
         Change download path for torrents.
 
@@ -560,7 +560,7 @@ class TorrentsAPI(APIGroup):
             data=data,
         )
 
-    async def rename(self, hash: InfoHash, name: str):
+    async def rename(self, hash: InfoHash, name: str) -> None:
         """Rename a torrent."""
         data = ParamDict.with_hash(hash)
         data.required_str("name", name)
@@ -571,7 +571,7 @@ class TorrentsAPI(APIGroup):
             data=data,
         )
 
-    async def set_category(self, hashes: InfoHashesOrAll, category: str):
+    async def set_category(self, hashes: InfoHashesOrAll, category: str) -> None:
         """
         Change torrents' category.
 
@@ -601,7 +601,7 @@ class TorrentsAPI(APIGroup):
             "torrents/categories",
         )
 
-    async def create_category(self, category: str, save_path: StrPath):
+    async def create_category(self, category: str, save_path: StrPath) -> None:
         """Create category."""
         data = ParamDict()
         data.required_str("category", category)
@@ -613,7 +613,7 @@ class TorrentsAPI(APIGroup):
             data=data,
         )
 
-    async def edit_category(self, category: str, save_path: StrPath):
+    async def edit_category(self, category: str, save_path: StrPath) -> None:
         """Edit category."""
         # since API v2.1.0
         # empty save_path ("") is default save path
@@ -628,7 +628,7 @@ class TorrentsAPI(APIGroup):
             data=data,
         )
 
-    async def remove_categories(self, categories: Iterable[str]):
+    async def remove_categories(self, categories: Iterable[str]) -> None:
         """Remove category."""
         _check_iterable_except_str("categories", categories)
 
@@ -642,7 +642,7 @@ class TorrentsAPI(APIGroup):
         )
 
     @since((2, 3, 0))
-    async def add_tags(self, hashes: InfoHashesOrAll, tags: Iterable[str]):
+    async def add_tags(self, hashes: InfoHashesOrAll, tags: Iterable[str]) -> None:
         _check_iterable_except_str("tags", tags)
 
         data = ParamDict.with_hashes_or_all(hashes)
@@ -655,7 +655,7 @@ class TorrentsAPI(APIGroup):
         )
 
     @since((2, 3, 0))
-    async def remove_tags(self, hashes: InfoHashesOrAll, tags: Iterable[str]):
+    async def remove_tags(self, hashes: InfoHashesOrAll, tags: Iterable[str]) -> None:
         _check_iterable_except_str("tags", tags)
 
         data = ParamDict.with_hashes_or_all(hashes)
@@ -668,13 +668,13 @@ class TorrentsAPI(APIGroup):
 
     @since((2, 3, 0))
     async def tags(self) -> List[str]:
-        return await self._request_json(
+        return await self._request_json(  # type: ignore[no-any-return]
             "GET",
             "torrents/tags",
         )
 
     @since((2, 3, 0))
-    async def create_tags(self, tags: Iterable[str]):
+    async def create_tags(self, tags: Iterable[str]) -> None:
         _check_iterable_except_str("tags", tags)
 
         data = ParamDict()
@@ -686,7 +686,7 @@ class TorrentsAPI(APIGroup):
         )
 
     @since((2, 3, 0))
-    async def delete_tags(self, tags: Iterable[str]):
+    async def delete_tags(self, tags: Iterable[str]) -> None:
         _check_iterable_except_str("tags", tags)
 
         data = ParamDict()
@@ -697,7 +697,7 @@ class TorrentsAPI(APIGroup):
             data=data,
         )
 
-    async def set_auto_management(self, hashes: InfoHashesOrAll, enable: bool):
+    async def set_auto_management(self, hashes: InfoHashesOrAll, enable: bool) -> None:
         data = ParamDict.with_hashes_or_all(hashes)
         data.optional_bool("enable", enable)
 
@@ -707,7 +707,7 @@ class TorrentsAPI(APIGroup):
             data=data,
         )
 
-    async def toggle_sequential_download(self, hashes: InfoHashesOrAll):
+    async def toggle_sequential_download(self, hashes: InfoHashesOrAll) -> None:
         """Flip ``seq_dl`` values for torrents."""
         data = ParamDict.with_hashes_or_all(hashes)
 
@@ -718,7 +718,7 @@ class TorrentsAPI(APIGroup):
         )
 
     @virtual
-    async def set_sequential_download(self, hashes: InfoHashesOrAll, value: bool):
+    async def set_sequential_download(self, hashes: InfoHashesOrAll, value: bool) -> None:
         """
         Change ``seq_dl`` for torrents.
 
@@ -738,7 +738,7 @@ class TorrentsAPI(APIGroup):
         if targets:
             await self.toggle_sequential_download(targets)
 
-    async def toggle_first_last_piece_prio(self, hashes: InfoHashesOrAll):
+    async def toggle_first_last_piece_prio(self, hashes: InfoHashesOrAll) -> None:
         """Flip ``f_l_piece_prio`` values for torrents."""
         await self._request_text(
             "POST",
@@ -747,7 +747,7 @@ class TorrentsAPI(APIGroup):
         )
 
     @virtual
-    async def set_first_last_piece_prio(self, hashes: InfoHashesOrAll, value: bool):
+    async def set_first_last_piece_prio(self, hashes: InfoHashesOrAll, value: bool) -> None:
         """
         Change ``f_l_piece_prio`` for torrents.
 
@@ -767,7 +767,7 @@ class TorrentsAPI(APIGroup):
         if targets:
             await self.toggle_first_last_piece_prio(targets)
 
-    async def set_force_start(self, hashes: InfoHashesOrAll, force: bool):
+    async def set_force_start(self, hashes: InfoHashesOrAll, force: bool) -> None:
         """Set ``force_start`` flags for torrents."""
         data = ParamDict.with_hashes_or_all(hashes)
         data.required_bool("value", force)
@@ -778,7 +778,7 @@ class TorrentsAPI(APIGroup):
             data=data,
         )
 
-    async def set_super_seeding(self, hashes: InfoHashesOrAll, value: bool):
+    async def set_super_seeding(self, hashes: InfoHashesOrAll, value: bool) -> None:
         """Set ``super_seeding`` flags for torrents."""
         data = ParamDict.with_hashes_or_all(hashes)
         # default value (invalid value) is treated as false
@@ -791,15 +791,15 @@ class TorrentsAPI(APIGroup):
         )
 
     @overload
-    async def rename_file(self, hash: InfoHash, id: int, name: str):
+    async def rename_file(self, hash: InfoHash, id: int, name: str) -> None:
         """available until client 4.3.3"""
 
     @overload
-    async def rename_file(self, hash: InfoHash, old_path: str, new_path: str):
+    async def rename_file(self, hash: InfoHash, old_path: str, new_path: str) -> None:
         """available since client 4.3.3 or API 2.7.0"""
 
-    @since((2, 4, 0))
-    async def rename_file(self, hash, arg, arg2):
+    # @since((2, 4, 0))
+    async def rename_file(self, hash: InfoHash, *args: Any, **kwargs: Any) -> None:
         """
         Rename a file in torrent.
 
@@ -816,6 +816,37 @@ class TorrentsAPI(APIGroup):
 
         """
         # API 2.4.0
+
+        client = self._client()
+        legacy = APIVersion.compare(client.api_version, (2, 7, 0)) < 0
+        nargs = len(args)
+
+        if nargs > 2:
+            raise TypeError("Too many arguments")
+        if nargs == 2:
+            pass
+        elif nargs == 1:
+            # Missing one argument
+            key = "name" if isinstance(args[0], int) else "new_path"
+            try:
+                args += (kwargs.pop(key),)
+            except KeyError:
+                raise TypeError(f"Missing argument {key!r}") from None
+        else:
+            try:
+                if "old_path" in kwargs:
+                    args = (kwargs.pop("old_path"), kwargs.pop("new_path"))
+                elif "id" in kwargs:
+                    args = (kwargs.pop("id"), kwargs.pop("name"))
+                else:
+                    raise KeyError("id" if legacy else "old_path")
+            except KeyError as ex:
+                raise TypeError(f"Missing argument {ex.args[0]!r}") from None
+
+        if kwargs:
+            raise TypeError(f"Extra keyword arguments: {kwargs.keys()!r}")
+
+        arg, arg2 = args
 
         data = ParamDict.with_hash(hash)
         if isinstance(arg, str):
@@ -846,7 +877,7 @@ class TorrentsAPI(APIGroup):
             raise
 
     @since((2, 8, 0))
-    async def rename_folder(self, hash: InfoHash, old_path: str, new_path: str):
+    async def rename_folder(self, hash: InfoHash, old_path: str, new_path: str) -> None:
         """Rename a folder."""
         # API 2.8.0
 
@@ -940,7 +971,7 @@ class AddFormBuilder:
     _stop_condition: Optional[str] = None
     _content_layout: Optional[str] = None
 
-    def __deepcopy__(self, memodict=None):
+    def __deepcopy__(self, memodict: Optional[Dict[int, Any]] = None) -> Self:
         return dataclasses.replace(
             self,
             _urls=list(self._urls),
@@ -1135,7 +1166,7 @@ class AddFormBuilder:
         Build :class:`~aiohttp.FormData`.
         """
 
-        def bool_str(b: bool):
+        def bool_str(b: bool) -> str:
             """boolean to lowercase string"""
             return "true" if b else "false"
 

@@ -4,7 +4,7 @@ from aioqbt.client import APIClient, APIGroup
 __all__ = ("AuthAPI",)
 
 
-async def _auth_login(client: APIClient, username: str, password: str):
+async def _auth_login(client: APIClient, username: str, password: str) -> None:
     resp = await client.request(
         "POST",
         "auth/login",
@@ -28,10 +28,10 @@ class AuthAPI(APIGroup):
     API methods under ``auth``.
     """
 
-    async def login(self, username: str, password: str):
+    async def login(self, username: str, password: str) -> None:
         return await _auth_login(self._client(), username, password)
 
-    async def logout(self):
+    async def logout(self) -> None:
         # Seem that logout always succeed
         await self._request_text(
             "POST",

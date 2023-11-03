@@ -7,6 +7,7 @@ import sys
 from typing import Optional
 
 import aiohttp
+from typing_extensions import Self
 
 
 class AQError(Exception):
@@ -56,7 +57,7 @@ class APIError(AQError):
         cls,
         resp: aiohttp.ClientResponse,
         message: str = "",
-    ):
+    ) -> Self:
         """Create an exception instance based on a response."""
 
         return cls(
@@ -65,10 +66,10 @@ class APIError(AQError):
             resp=resp,
         )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{type(self).__name__}(status={self.status!r}, message={self.message!r})"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return repr(self)
 
 

@@ -1,15 +1,20 @@
 import contextlib
-from typing import Dict
+from typing import AsyncIterator, Dict, List
 
 from helper.lang import busy_wait_for
 from helper.torrent import TorrentData
 
 from aioqbt.api import AddFormBuilder
+from aioqbt.api.types import TorrentInfo
 from aioqbt.client import APIClient
 
 
 @contextlib.asynccontextmanager
-async def temporary_torrents(client: APIClient, *samples: TorrentData, paused: bool = True):
+async def temporary_torrents(
+    client: APIClient,
+    *samples: TorrentData,
+    paused: bool = True,
+) -> AsyncIterator[List[TorrentInfo]]:
     builder = AddFormBuilder.with_client(client)
     builder = builder.paused(paused)
 
@@ -24,7 +29,7 @@ async def temporary_torrents(client: APIClient, *samples: TorrentData, paused: b
     if hashes:
         await client.torrents.add(builder.build())
 
-        async def cond_added():
+        async def cond_added() -> bool:
             nonlocal torrents
             torrents = await client.torrents.info(hashes=hashes)
             return len(torrents) == len(hashes)

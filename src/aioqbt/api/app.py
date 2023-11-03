@@ -37,21 +37,21 @@ class AppAPI(APIGroup):
             "app/buildInfo",
         )
 
-    async def shutdown(self):
+    async def shutdown(self) -> None:
         """Shut down qBittorrent client."""
-        return await self._request_text(  # pragma: no cover
+        await self._request_text(  # pragma: no cover
             "POST",
             "app/shutdown",
         )
 
     async def preferences(self) -> Preferences:
         """Get application preferences."""
-        return await self._request_json(
+        return await self._request_json(  # type: ignore[no-any-return]
             "GET",
             "app/preferences",
         )
 
-    async def set_preferences(self, prefs: Mapping[str, object]):
+    async def set_preferences(self, prefs: Mapping[str, object]) -> None:
         """
         Set application preferences.
 
@@ -96,7 +96,7 @@ class AppAPI(APIGroup):
         params = ParamDict()
         params.put("iface", iface, optional=False, prepare=str, default="")
 
-        return await self._request_json(
+        return await self._request_json(  # type: ignore[no-any-return]
             "GET",
             "app/networkInterfaceAddressList",
             params=params,

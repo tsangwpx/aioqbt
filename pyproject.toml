@@ -74,16 +74,32 @@ line_length = 100
 profile = "black"
 
 [tool.mypy]
-warn_unused_configs = true
 python_version = "3.7"
-check_untyped_defs = true
-show_error_codes = true
-warn_unused_ignores = true
-no_implicit_optional = true
 sqlite_cache = true
-disallow_any_unimported = true
+# selected strict options, sorted by name
+check_untyped_defs = true
 disallow_any_generics = true
+disallow_any_unimported = true
 disallow_subclassing_any = true
+disallow_untyped_decorators = true
+extra_checks = true
+no_implicit_reexport = true
+strict_equality = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unreachable = true
+warn_unused_configs = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = [
+    "aioqbt.*",
+    "helper.*", # test helper
+]
+# complete strict options
+disallow_incomplete_defs = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "strict"
