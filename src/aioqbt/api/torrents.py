@@ -968,6 +968,7 @@ class AddFormBuilder:
     _auto_tmm: Optional[bool] = None
     _sequential_download: Optional[bool] = None
     _first_last_piece_prio: Optional[bool] = None
+    _add_to_top_of_queue: Optional[bool] = None
     _stop_condition: Optional[str] = None
     _content_layout: Optional[str] = None
 
@@ -1148,6 +1149,13 @@ class AddFormBuilder:
         return self
 
     @copy_self
+    def add_to_top_of_queue(self, add_to_top_of_queue: Optional[bool]) -> Self:
+        """Set ``addToTopOfQueue`` value"""
+        # found in v4.6.0, API 2.8.19
+        self._add_to_top_of_queue = add_to_top_of_queue
+        return self
+
+    @copy_self
     def stop_condition(self, stop_condition: StopCondition) -> Self:
         """Set ``stopCondition`` value."""
         # API v2.8.15
@@ -1229,6 +1237,9 @@ class AddFormBuilder:
 
         if self._sequential_download is not None:
             form.add_field("sequentialDownload", bool_str(self._sequential_download))
+
+        if self._add_to_top_of_queue is not None:
+            form.add_field("addToTopOfQueue", bool_str(self._add_to_top_of_queue))
 
         if self._first_last_piece_prio is not None:
             form.add_field("firstLastPiecePrio", bool_str(self._first_last_piece_prio))
