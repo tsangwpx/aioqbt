@@ -1,8 +1,8 @@
-from typing import Any, AsyncIterator, Dict, Iterable
+from typing import Any, AsyncIterator, Dict, Iterable, List
 
 import pytest
 import pytest_asyncio
-from helper.service import LoginInfo, login_session_context, parse_login_env, server_process
+from helper.service import LoginInfo, client_context, parse_login_env, server_process
 
 from aioqbt.client import APIClient
 
@@ -23,9 +23,14 @@ def mock_login(tmp_path_factory: pytest.TempPathFactory) -> Iterable[LoginInfo]:
         )
 
 
+@pytest.fixture(scope="session")
+def client_cookies() -> List[Any]:
+    return []
+
+
 @pytest_asyncio.fixture
-async def client(mock_login: LoginInfo) -> AsyncIterator[APIClient]:
-    async with login_session_context(mock_login) as client:
+async def client(mock_login: LoginInfo, client_cookies: List[Any]) -> AsyncIterator[APIClient]:
+    async with client_context(mock_login, client_cookies) as client:
         yield client
 
 

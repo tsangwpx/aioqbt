@@ -60,6 +60,7 @@ class APIClient:
         ssl: Optional[SSLContext] = None,
         client_version: Optional[ClientVersion] = None,
         api_version: Optional[APIVersion] = None,
+        logout_when_close: Optional[bool] = None,
         logger: Optional[logging.Logger] = None,
     ) -> None:
         if logger is None:
@@ -96,6 +97,7 @@ class APIClient:
             503,  # Service unavailable
             502,  # Bad gateway: reverse proxy may be overloaded
         }
+        self._logout_when_close = logout_when_close
 
     def __repr__(self) -> str:
         return f"<{type(self).__name__} {self.base_url!r}>"
@@ -129,6 +131,12 @@ class APIClient:
 
         if self._http is None:
             return
+
+        if self._logout_when_close:
+            try:
+                await self.auth.logout()
+            except exc.ForbiddenError:
+                pass
 
         # break cycle references to help GC.
         vars_dict = vars(self)
@@ -490,6 +498,7 @@ async def create_client(
     username: Optional[str] = None,
     password: Optional[str] = None,
     *,
+    logout_when_close: Optional[bool] = None,
     http: Optional[aiohttp.ClientSession] = None,
     ssl: Optional[SSLContext] = None,
 ) -> APIClient:
@@ -505,6 +514,7 @@ async def create_client(
     :param str url: URL to WebUI API, for example, ``https://localhost:8080/api/v2/``
     :param str username: login name
     :param str password: login password
+    :param logout_when_close: whether logout during :meth:`~.APIClient.close`.
     :param http: :class:`aiohttp.ClientSession` object
     :param ssl: :class:`ssl.SSLContext` for custom TLS connections
     :raises LoginError: if authentication is failed.
@@ -512,12 +522,16 @@ async def create_client(
     if (username is None) != (password is None):
         raise TypeError("Specify both username and password arguments, or neither of them")
 
+    if logout_when_close is None:
+        logout_when_close = username is not None
+
     mapper = ObjectMapper()
     client = APIClient(
         base_url=url,
         mapper=mapper,
         http=http,
         ssl=ssl,
+        logout_when_close=logout_when_close,
     )
 
     if username is not None:
@@ -528,16 +542,20 @@ async def create_client(
             await client.close()
             raise
 
-    try:
-        client_version, api_version = await asyncio.gather(
-            client.app.version(),
-            client.app.webapi_version(),
-        )
-    except exc.ForbiddenError:
-        pass
-    else:
-        client.client_version = ClientVersion.parse(client_version)
-        client.api_version = APIVersion.parse(api_version)
+    if http is not None or username is not None:
+        # version and webapi_version require logged-in cookies
+        # access them if username is provided or http is external
+
+        try:
+            client_version, api_version = await asyncio.gather(
+                client.app.version(),
+                client.app.webapi_version(),
+            )
+        except exc.ForbiddenError:
+            pass
+        else:
+            client.client_version = ClientVersion.parse(client_version)
+            client.api_version = APIVersion.parse(api_version)
 
     return client
 

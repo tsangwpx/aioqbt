@@ -173,7 +173,7 @@ def server_process(
 
 
 @contextlib.asynccontextmanager
-async def login_session_context(login: LoginInfo) -> AsyncIterator[APIClient]:
+async def client_context(login: LoginInfo, cookies: List[Any]) -> AsyncIterator[APIClient]:
     """
     Save/restore cookies from login and yield APIClient
     """
@@ -192,9 +192,11 @@ async def login_session_context(login: LoginInfo) -> AsyncIterator[APIClient]:
         client = await create_client(
             url=url,
             http=http,
+            logout_when_close=False,
         )
 
         if client.api_version is None:
+            # the cookies seem expired
             client = None
 
     if client is None:
@@ -202,15 +204,16 @@ async def login_session_context(login: LoginInfo) -> AsyncIterator[APIClient]:
             url=url,
             username=username,
             password=password,
+            logout_when_close=False,
             http=http,
         )
 
-    cookies = []
+    new_cookies = []
     for item in list(http.cookie_jar):
         assert isinstance(item, Morsel)
-        cookies.append((item.key, item))
+        new_cookies.append((item.key, item))
 
-    login.cookies[:] = cookies
+    cookies[:] = new_cookies
 
     async with http:
         async with client:
