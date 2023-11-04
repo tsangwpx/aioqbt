@@ -782,7 +782,7 @@ class SyncServerState(TypedDict, total=False):
     Dict of qBittorrent status and statistics in :attr:`.SyncMainData.server_state`.
     """
 
-    connection_status: str
+    connection_status: Union[str, ConnectionStatus]
     dht_nodes: int
     dl_info_data: int
     dl_info_speed: int
@@ -790,9 +790,26 @@ class SyncServerState(TypedDict, total=False):
     up_info_data: int
     up_info_speed: int
     up_rate_limit: int
+
+    alltime_dl: int
+    alltime_ul: int
+    total_wasted_session: int
+    global_ratio: str
+    total_peer_connections: int
+
     queueing: bool
+    use_alt_speed_limits: bool
     refresh_interval: int
     free_space_on_disk: int
+    use_subcategories: bool
+
+    average_time_queue: int
+    read_cache_hits: str
+    read_cache_overload: str
+    write_cache_overload: str
+    queued_io_jobs: int
+    total_buffers_size: int
+    total_queue_size: int
 
 
 @declarative
@@ -805,18 +822,36 @@ class SyncMainData:
     full_update: bool = field(
         default=False,
     )
+
     torrents: Dict[str, SyncTorrentInfo] = field(
         default_factory=dict,
     )
     torrents_removed: List[str] = field(
         default_factory=list,
     )
+
     categories: Dict[str, SyncCategory] = field(
         default_factory=dict,
     )
     categories_removed: List[str] = field(
         default_factory=list,
     )
+
+    tags: List[str] = field(
+        default_factory=list,
+    )
+    tags_removed: List[str] = field(
+        default_factory=list,
+    )
+
+    # trackers are new in 4.6.0
+    trackers: Dict[str, List[str]] = field(
+        default_factory=dict,
+    )
+    trackers_removed: List[str] = field(
+        default_factory=list,
+    )
+
     server_state: SyncServerState = field(
         default_factory=lambda: SyncServerState(),
     )
