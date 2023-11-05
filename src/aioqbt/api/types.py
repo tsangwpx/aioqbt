@@ -2,7 +2,7 @@
 Types utilized and returned by API methods.
 """
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union, overload
+from typing import Any, Dict, List, Optional, Type, TypeVar, Union, overload
 
 from typing_extensions import TypedDict
 
@@ -494,7 +494,7 @@ class TorrentInfo:
     num_leechs: int
     num_incomplete: int
 
-    state: TorrentState = field(
+    state: Union[str, TorrentState] = field(
         convert=EnumConverter(TorrentState),
     )
     eta: timedelta = field(
@@ -536,11 +536,11 @@ class TorrentInfo:
         convert=DurationConverter(TimeUnit.MINUTES, _DURATION_NONE_TABLE),
     )
     ratio: float
-    ratio_limit: float
-    seeding_time_limit: SeedingTimeLimitTypes = field(
+    ratio_limit: Union[float, RatioLimits]
+    seeding_time_limit: Union[timedelta, int, SeedingTimeLimits] = field(
         convert=DurationConverter(TimeUnit.MINUTES, _table_from_enum(SeedingTimeLimits)),
     )
-    inactive_seeding_time_limit: InactiveSeedingTimeLimitTypes = field(
+    inactive_seeding_time_limit: Union[timedelta, int, InactiveSeedingTimeLimits] = field(
         convert=DurationConverter(TimeUnit.MINUTES, _table_from_enum(SeedingTimeLimits)),
     )
     seen_complete: datetime = field(
@@ -561,7 +561,7 @@ class TorrentInfo:
     total_size: int
 
     def __repr__(self) -> str:
-        return f"<{type(self).__name__} {self.hash} {self.state.value} {self.name!r}>"
+        return f"<{type(self).__name__} {self.hash} {self.state} {self.name!r}>"
 
 
 @declarative
@@ -653,7 +653,7 @@ class Tracker:
     """
 
     url: str
-    status: TrackerStatus = field(
+    status: Union[int, TrackerStatus] = field(
         convert=EnumConverter(TrackerStatus),
     )
     tier: int
@@ -697,7 +697,7 @@ class FileEntry:
     size: int
     progress: float
     priority: Union[int, FilePriority]
-    piece_range: Tuple[int, int]
+    piece_range: List[int]
     is_seed: bool = field(repr=False)  # only available in the first item
     availability: float
     index: int = field(repr=False)  # since API v2.8.2
@@ -944,6 +944,6 @@ class TransferInfo:
     up_rate_limit: int
     dht_nodes: int
 
-    connection_status: ConnectionStatus = field(
+    connection_status: Union[str, ConnectionStatus] = field(
         convert=EnumConverter(ConnectionStatus),
     )

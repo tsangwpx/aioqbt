@@ -13,10 +13,9 @@ from aioqbt.api.types import (
     Category,
     ContentLayout,
     FileEntry,
-    InactiveSeedingTimeLimitTypes,
     InfoFilter,
-    RatioLimitTypes,
-    SeedingTimeLimitTypes,
+    RatioLimits,
+    SeedingTimeLimits,
     StopCondition,
     TorrentInfo,
     TorrentProperties,
@@ -24,7 +23,7 @@ from aioqbt.api.types import (
     WebSeed,
 )
 from aioqbt.bittorrent import InfoHash, InfoHashes, InfoHashesOrAll, get_info_hash
-from aioqbt.chrono import TimeUnit
+from aioqbt.chrono import Minutes, TimeUnit
 from aioqbt.client import APIClient, APIGroup, since, virtual
 from aioqbt.typing import StrPath
 from aioqbt.version import APIVersion, ClientVersion
@@ -429,9 +428,9 @@ class TorrentsAPI(APIGroup):
     async def set_share_limits(
         self,
         hashes: InfoHashesOrAll,
-        ratio_limit: RatioLimitTypes,
-        seeding_time_limit: SeedingTimeLimitTypes,
-        inactive_seeding_time_limit: Optional[InactiveSeedingTimeLimitTypes] = None,
+        ratio_limit: Union[float, RatioLimits],
+        seeding_time_limit: Union[timedelta, int, SeedingTimeLimits],
+        inactive_seeding_time_limit: Union[timedelta, int, SeedingTimeLimits, None] = None,
     ) -> None:
         """
         Set share limits for torrents.
@@ -1137,7 +1136,7 @@ class AddFormBuilder:
 
     @copy_self
     @since((2, 8, 1))
-    def ratio_limit(self, ratio_limit: RatioLimitTypes) -> Self:
+    def ratio_limit(self, ratio_limit: Union[float, RatioLimits]) -> Self:
         """Set ``ratioLimit`` value."""
         # API 2.8.1
         self._ratio_limit = float(ratio_limit)
@@ -1145,7 +1144,10 @@ class AddFormBuilder:
 
     @copy_self
     @since((2, 8, 1))
-    def seeding_time_limit(self, seeding_time_limit: SeedingTimeLimitTypes) -> Self:
+    def seeding_time_limit(
+        self,
+        seeding_time_limit: Union[timedelta, Minutes, SeedingTimeLimits],
+    ) -> Self:
         """Set ``seedingTimeLimit`` value."""
         # API 2.8.1
         self._seeding_time_limit = int(_convert_duration(seeding_time_limit, TimeUnit.MINUTES))
@@ -1154,7 +1156,7 @@ class AddFormBuilder:
     @copy_self
     def inactive_seeding_time_limit(
         self,
-        inactive_seeding_time_limit: Optional[InactiveSeedingTimeLimitTypes],
+        inactive_seeding_time_limit: Union[timedelta, Minutes, SeedingTimeLimits, None],
     ) -> Self:
         """Set ``inactiveSeedingTimeLimit`` value."""
         # API 2.9.2
