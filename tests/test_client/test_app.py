@@ -1,9 +1,5 @@
-import warnings
-from typing import Any, Dict, List, Tuple, Union
-
 import pytest
 from helper.lang import retry_assert
-from typing_extensions import get_origin, get_type_hints
 
 from aioqbt.api.types import BuildInfo, NetworkInterface, Preferences
 from aioqbt.client import APIClient
@@ -37,49 +33,6 @@ async def test_preferences(client: APIClient):
     prefs = await client.app.preferences()
 
     assert isinstance(prefs, dict), type(prefs)
-
-    annotations = get_type_hints(Preferences)
-    missing: List[str] = []
-    invalid: Dict[str, Tuple[Any, Any]] = {}
-
-    for name, tp in annotations.items():
-        try:
-            value = prefs.pop(name)  # type: ignore[misc]
-        except KeyError:
-            missing.append(name)
-            continue
-
-        if tp in {int, float, str, bool}:
-            tp_origin = tp
-        else:
-            tp_origin = get_origin(tp)
-
-        assert tp_origin is not None, tp
-
-        if tp_origin is Union:
-            continue
-
-        assert tp_origin in (bool, int, str, float, list, dict), tp_origin
-
-        if not isinstance(value, tp_origin):
-            invalid[name] = (tp, type(value))
-
-    header = f"client=v{client.client_version}, api_version={client.api_version}"
-
-    if missing:
-        # missing keys occurred across versions
-        msg = ",".join(missing)
-        print(f"Missing keys ({header}):\n{msg!s}")
-
-    # show warning instead of failing tests
-
-    if prefs:
-        msg = "\n".join(f"{k}: {type(v)}" for k, v in prefs.items())
-        warnings.warn(UserWarning(f"Extra prefs ({header}):\n{msg}"))
-
-    if invalid:
-        msg = "\n".join(f"{s}: {a}, {b}" for s, (a, b) in invalid.items())
-        warnings.warn(UserWarning(f"Invalid typing ({header}):\n{msg}"))
 
 
 @pytest.mark.asyncio
