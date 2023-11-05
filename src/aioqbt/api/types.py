@@ -224,7 +224,7 @@ class Preferences(TypedDict, total=False):
     file_log_max_size: int
     file_log_delete_old: bool
     file_log_age: int
-    file_log_age_type: str
+    file_log_age_type: int
 
     torrent_content_layout: str
     add_to_top_of_queue: bool
@@ -277,15 +277,19 @@ class Preferences(TypedDict, total=False):
     max_uploads: int
     max_uploads_per_torrent: int
 
-    proxy_type: int
+    proxy_type: Union[int, str]  # int -> str in v4.6.0
     proxy_ip: str
     proxy_port: int
     proxy_auth_enabled: bool
     proxy_username: str
     proxy_password: str
     proxy_hostname_lookup: bool
+
+    proxy_bittorrent: bool  # found in v4.6.0
     proxy_torrents_only: bool
     proxy_peer_connections: bool
+    proxy_rss: bool  # found in v4.6.0
+    proxy_misc: bool  # found in v4.6.0
 
     ip_filter_enabled: bool
     ip_filter_path: str
@@ -384,14 +388,18 @@ class Preferences(TypedDict, total=False):
     resume_data_storage_type: str
     memory_working_set_limit: int
     current_network_interface: str
+    current_interface_name: str  # v4.6.0
     current_interface_address: str
     save_resume_data_interval: int
+    torrent_file_size_limit: int
     recheck_completed_torrents: bool
     refresh_interval: int
     resolve_peer_countries: bool
     reannounce_when_address_changed: bool
 
     # libtorrent
+    bdecode_depth_limit: int
+    bdecode_token_limit: int
     async_io_threads: int
     hashing_threads: int
     file_pool_size: int
@@ -410,6 +418,8 @@ class Preferences(TypedDict, total=False):
     send_buffer_low_watermark: int
     send_buffer_watermark_factor: int
     connection_speed: int
+    socket_send_buffer_size: int  # found in v4.6.0
+    socket_receive_buffer_size: int  # found in v4.6.0
     socket_backlog_size: int
     outgoing_ports_min: int
     outgoing_ports_max: int
@@ -733,8 +743,19 @@ class SyncTorrentInfo(TypedDict, total=False):
     Dict of torrent info in :attr:`.SyncMainData.torrents`.
     """
 
+    # This type and TorrentInfo share mostly identical set of keys
+    # Annotations are more primordial here.
+
+    # Due to difference algorithm, "hash" is always filtered out.
+    # hash: str
+
+    infohash_v1: str
+    infohash_v2: str
+
     name: str
     size: int
+
+    magnet_uri: str
     progress: float
     dlspeed: int
     upspeed: int
@@ -743,13 +764,23 @@ class SyncTorrentInfo(TypedDict, total=False):
     num_complete: int
     num_leechs: int
     num_incomplete: int
-    ratio: float
-    eta: Any
+
     state: str
+    eta: int
     seq_dl: bool
     f_l_piece_prio: bool
+
+    category: str
+    tags: str
+    super_seeding: bool
+    force_start: bool
+    save_path: str
+    download_path: str
+    content_path: str
+    added_on: int
     completion_on: int
     tracker: str
+    trackers_count: int
     dl_limit: int
     up_limit: int
     downloaded: int
@@ -757,14 +788,21 @@ class SyncTorrentInfo(TypedDict, total=False):
     downloaded_session: int
     uploaded_session: int
     amount_left: int
-    save_path: str
     completed: int
     max_ratio: float
     max_seeding_time: int
+    max_inactive_seeding_time: int
+    ratio: float
     ratio_limit: float
     seeding_time_limit: int
+    inactive_seeding_time_limit: int
     seen_complete: int
+    auto_tmm: bool
+    time_active: int
+    seeding_time: int
     last_activity: int
+    availability: float
+
     total_size: int
 
 
