@@ -34,7 +34,16 @@ from aioqbt.mapper import ObjectMapper
 from aioqbt.version import APIVersion, ClientVersion
 
 if TYPE_CHECKING:
-    from aioqbt.api import AppAPI, AuthAPI, LogAPI, SyncAPI, TorrentsAPI, TransferAPI
+    from aioqbt.api import (
+        AppAPI,
+        AuthAPI,
+        LogAPI,
+        RSSAPI,
+        SearchAPI,
+        SyncAPI,
+        TorrentsAPI,
+        TransferAPI,
+    )
 
 __all__ = (
     "APIClient",
@@ -376,6 +385,24 @@ class APIClient:
         from aioqbt.api.log import LogAPI
 
         return LogAPI(self)
+
+    @cached_property
+    def rss(self) -> "RSSAPI":
+        """
+        RSS API methods.
+        """
+        from aioqbt.api.rss import RSSAPI
+
+        return RSSAPI(self)
+
+    @cached_property
+    def search(self) -> "SearchAPI":
+        """
+        Search API methods.
+        """
+        from aioqbt.api.search import SearchAPI
+
+        return SearchAPI(self)
 
     @cached_property
     def sync(self) -> "SyncAPI":

@@ -2,9 +2,9 @@
 Types utilized and returned by API methods.
 """
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Type, TypeVar, Union, overload
+from typing import Any, Dict, Iterator, List, Mapping, Optional, Type, TypeVar, Union, overload
 
-from typing_extensions import TypedDict
+from typing_extensions import Final, Literal, TypedDict
 
 from aioqbt._compat import IntEnum, StrEnum
 from aioqbt.chrono import Minutes, TimeUnit
@@ -12,6 +12,7 @@ from aioqbt.converter import (
     DateTimeConverter,
     DurationConverter,
     EnumConverter,
+    RFC2822DateTimeConverter,
     ScalarListConverter,
 )
 from aioqbt.mapper import declarative, field
@@ -947,3 +948,217 @@ class TransferInfo:
     connection_status: Union[str, ConnectionStatus] = field(
         convert=EnumConverter(ConnectionStatus),
     )
+
+
+# RSS related
+_RSS_SEPARATOR: Final = "\\"
+_FEED_FOLDER_UNION = Union["RSSFeed", "RSSFolder"]
+
+
+@declarative
+class RSSArticle:
+    """RSS article."""
+
+    id: str
+    title: str
+    description: str
+    date: datetime = field(
+        convert=RFC2822DateTimeConverter(),
+    )
+    link: str
+    torrentURL: str
+
+
+@declarative
+class RSSItem:
+    """Base class of :class:`RSSFolder` and :class:`RSSFeed`"""
+
+
+@declarative
+class RSSFolder(RSSItem, Mapping[str, _FEED_FOLDER_UNION]):
+    """
+    RSSFolder is a container in hierarchical tree.
+
+    .. code-block:: text
+
+        folder
+        |-- linux
+        |-- news
+        |   |-- local
+        |   |-- world
+
+    RSSFolder is a dict-like object that children :class:`RSSFeed` and :class:`RSSFolder` are
+    accessed by their names: ``folder["linux"]``.
+    The number of direct children is returned by ``len(folder)``
+    while the names of them by ``folder.keys()``.
+
+    Further children can be accessed by joining names with backslashes.
+    The following lines are equivalent::
+
+        folder["news"]["local"]
+        folder[r"news\\local"]
+
+    """
+
+    _items: Mapping[str, _FEED_FOLDER_UNION]
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._items)
+
+    def __len__(self) -> int:
+        return len(self._items)
+
+    def __getitem__(self, path: str) -> _FEED_FOLDER_UNION:
+        if _RSS_SEPARATOR not in path:
+            return self._items[path]
+
+        # use Any to pass typecheck
+        items: Mapping[str, _FEED_FOLDER_UNION] = self._items
+        parts = path.split(_RSS_SEPARATOR)
+        end = len(parts) - 1
+        for idx, name in enumerate(parts):
+            if not name:
+                raise KeyError(f"Empty segment at {idx}: {path!r}")
+
+            try:
+                result = items[name]
+            except KeyError:
+                raise KeyError(f"No item at {idx}: {path!r}")
+
+            if idx == end:
+                return result
+
+            if not isinstance(result, RSSFolder):
+                raise KeyError(f"Expect RSSFolder at {idx}: {path!r}")
+
+            items = result._items
+
+        raise AssertionError("unreachable")
+
+
+@declarative
+class RSSFeed(RSSItem):
+    """
+    RSS feed returned from :meth:`.RSSAPI.items`.
+
+    Attributes ``url`` and ``uid``  are always available.
+
+    The other attributes are available if ``with_data=True`` is passed to :meth:`.RSSAPI.items`.
+    Otherwise, :class:`AttributeError` raises when accessed.
+
+    Use :func:`hasattr` to check if doubted.
+    """
+
+    url: str
+    uid: str
+
+    # following attributes are available if with_data is set
+    title: str
+    lastBuildDate: str
+    isLoading: bool
+    hasError: bool
+    articles: List[RSSArticle]  # entries are processed in RSSAPI.items()
+
+    def __repr__(self) -> str:
+        if hasattr(self, "title"):
+            return f"<RSSFeed title={self.title!r} url={self.url!r}>"
+        else:
+            return f"<RSSFeed uid={self.uid!r} url={self.url!r}>"
+
+    __str__ = __repr__
+
+
+class RSSRule(TypedDict, total=False):
+    """
+    RSS rule configuration dict.
+
+    Rule dict is returned from :meth:`.RSSAPI.rules`.
+    It can be passed as argument to :meth:`.RSSAPI.set_rule`.
+    """
+
+    enabled: bool
+    useRegex: bool
+    mustContain: str
+    mustNotContain: str
+    episodeFilter: str
+    affectedFeeds: List[str]
+    savePath: str
+    assignedCategory: str
+    lastMatch: str
+    ignoreDays: int
+    addPaused: Optional[bool]
+    torrentContentLayout: str
+    smartFilter: bool
+    previouslyMatchedEpisodes: List[str]
+
+
+# Search related
+
+
+@declarative
+class SearchJobStart:
+    """
+    Result of :meth:`.SearchAPI.start`.
+    """
+
+    id: int
+
+
+@declarative
+class SearchJobStatus:
+    """
+    Search job status.
+    """
+
+    id: int
+    status: Union[str, Literal["Running"], Literal["Stopped"]]
+    total: int
+
+
+@declarative
+class SearchResultEntry:
+    """Search result entry."""
+
+    fileName: str
+    fileUrl: str
+    fileSize: str
+    nbSeeders: int
+    nbLeechers: int
+    siteUrl: str
+
+
+@declarative
+class SearchJobResults:
+    """Search job results."""
+
+    status: Union[str, Literal["Running"], Literal["Stopped"]]
+    results: List[SearchResultEntry]
+    total: int
+
+
+@declarative
+class SearchPluginCategory:
+    """Category supported by plugin."""
+
+    id: str
+    category: str
+
+
+@declarative
+class SearchPlugin:
+    """
+    Search plugin information.
+    """
+
+    enabled: bool
+    fullName: str
+    name: str
+    supportedCategories: Union[List[SearchPluginCategory], List[str]]
+    """
+    A list of supported categories.
+
+    In qBittorrent 4.3.x and later, this attribute is a list of :class:`.SearchPluginCategory`;
+    in earlier versions, a list of localized strings.
+    """
+    url: str
+    version: str

@@ -84,6 +84,23 @@ Transfer
     :members:
     :undoc-members:
 
+
+RSS
+----------------
+
+.. autoclass:: RSSAPI()
+    :members:
+    :undoc-members:
+
+
+Search
+----------------
+
+.. autoclass:: SearchAPI()
+    :members:
+    :undoc-members:
+
+
 API types
 ================
 
@@ -212,6 +229,49 @@ Data structures
     :members:
     :undoc-members:
     :show-inheritance:
+
+.. autoclass:: RSSItem()
+
+.. autoclass:: RSSFeed()
+    :members:
+    :undoc-members:
+
+.. autoclass:: RSSFolder()
+    :members:
+    :undoc-members:
+
+.. autoclass:: RSSArticle()
+    :members:
+    :undoc-members:
+
+.. autoclass:: RSSRule()
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. autoclass:: SearchResultEntry()
+    :members:
+    :undoc-members:
+
+.. autoclass:: SearchJobResults()
+    :members:
+    :undoc-members:
+
+.. autoclass:: SearchJobStart()
+    :members:
+    :undoc-members:
+
+.. autoclass:: SearchJobStatus()
+    :members:
+    :undoc-members:
+
+.. autoclass:: SearchPlugin()
+    :members:
+    :undoc-members:
+
+.. autoclass:: SearchPluginCategory()
+    :members:
+    :undoc-members:
 
 
 

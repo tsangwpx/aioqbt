@@ -9,6 +9,8 @@ See also :APIWiki:`the WebUI API reference <>` on qBittorrent wiki.
 from aioqbt.api.app import AppAPI
 from aioqbt.api.auth import AuthAPI
 from aioqbt.api.log import LogAPI
+from aioqbt.api.rss import RSSAPI
+from aioqbt.api.search import SearchAPI
 from aioqbt.api.sync import SyncAPI
 from aioqbt.api.torrents import AddFormBuilder, TorrentsAPI
 from aioqbt.api.transfer import TransferAPI
@@ -37,6 +39,17 @@ from aioqbt.api.types import (
     LogPeer,
     NetworkInterface,
     Preferences,
+    RSSArticle,
+    RSSFeed,
+    RSSFolder,
+    RSSItem,
+    RSSRule,
+    SearchJobResults,
+    SearchJobStart,
+    SearchJobStatus,
+    SearchPlugin,
+    SearchPluginCategory,
+    SearchResultEntry,
     SyncCategory,
     SyncMainData,
     SyncPeer,
@@ -56,6 +69,8 @@ __all__ = (
     "AppAPI",
     "AuthAPI",
     "LogAPI",
+    "RSSAPI",
+    "SearchAPI",
     "SyncAPI",
     "TorrentsAPI",
     "TransferAPI",

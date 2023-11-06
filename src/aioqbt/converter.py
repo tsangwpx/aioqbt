@@ -102,6 +102,19 @@ class DateTimeConverter(Converter):
             return datetime.fromtimestamp(value, tz)
 
 
+class RFC2822DateTimeConverter(Converter):
+    """
+    Convert rfc2822-formatted date time to :class:`datetime`.
+
+    """
+
+    def __call__(self, value: Any, context: Mapping[Any, Any]) -> datetime:
+        # lazy import
+        from email.utils import parsedate_to_datetime
+
+        return parsedate_to_datetime(value)
+
+
 class DurationConverter(Converter):
     """
     Convert number to timedelta.

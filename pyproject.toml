@@ -72,6 +72,7 @@ target-version = ["py37", "py38", "py39", "py310", "py311"]
 [tool.isort]
 line_length = 100
 profile = "black"
+classes = ["RSSAPI"]
 
 [tool.mypy]
 python_version = "3.7"
