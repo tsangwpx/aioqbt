@@ -1257,6 +1257,9 @@ class AddFormBuilder:
         if self._category is not None:
             form.add_field("category", self._category)
 
+        if self._tags is not None:
+            form.add_field("tags", self._tags)
+
         if self._skip_checking is not None:
             form.add_field("skip_checking", bool_str(self._skip_checking))
 

@@ -311,3 +311,17 @@ async def test_time_limit_methods(
 ):
     data = await consume_form(method(builder, value).build())
     assert data.get(key) == expected
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        pytest.param([], "", id="0"),
+        pytest.param(["hello"], "hello", id="1"),
+        pytest.param(["hello", "world"], "hello,world", id="2"),
+    ],
+)
+async def test_tags(builder: AddFormBuilder, value: Any, expected: Optional[str]):
+    data = await consume_form(builder.tags(value).build())
+    assert data.get("tags") == expected
