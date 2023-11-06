@@ -1,5 +1,5 @@
 import pytest
-from helper.service import LoginInfo
+from helper.client import LoginInfo
 
 from aioqbt import exc
 from aioqbt.client import create_client

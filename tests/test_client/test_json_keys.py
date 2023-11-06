@@ -40,7 +40,7 @@ from typing import (
 
 import pytest
 import pytest_asyncio
-from helper.service import LoginInfo, client_context
+from helper.client import LoginInfo, client_context
 from helper.torrent import TorrentData, make_torrent_files, make_torrent_single
 from helper.webapi import temporary_torrents
 from typing_extensions import Literal, get_args, get_origin, get_type_hints, is_typeddict

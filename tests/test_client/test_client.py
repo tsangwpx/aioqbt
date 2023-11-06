@@ -5,7 +5,7 @@ import aiohttp
 import aiohttp.web as aiohttp_web
 import pytest
 from aiohttp.hdrs import RETRY_AFTER
-from helper.service import LoginInfo
+from helper.client import LoginInfo
 from helper.web import temporary_web_server
 
 from aioqbt import exc

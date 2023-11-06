@@ -2,7 +2,8 @@ from typing import Any, AsyncIterator, Dict, Iterable, List
 
 import pytest
 import pytest_asyncio
-from helper.service import LoginInfo, client_context, parse_login_env, server_process
+from helper.client import LoginInfo, client_context, parse_login_env
+from helper.service import server_process
 
 from aioqbt.client import APIClient
 

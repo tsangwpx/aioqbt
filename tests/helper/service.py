@@ -1,58 +1,11 @@
 import contextlib
 import logging
-import os
 import socket
 import subprocess
 import sys
 import time
-from dataclasses import dataclass, field
-from http.cookies import Morsel
 from pathlib import Path
-from typing import Any, AsyncIterator, Iterator, List, Optional, Tuple
-
-import aiohttp
-
-from aioqbt.client import APIClient, create_client
-
-
-@dataclass
-class LoginInfo:
-    url: str
-    username: str
-    password: str
-    cookies: List[Any] = field(default_factory=list)
-
-
-def parse_login(spec: str) -> LoginInfo:
-    from urllib.parse import urlsplit
-
-    parts = urlsplit(spec)
-
-    username = parts.username
-    password = parts.password
-
-    if "@" in parts.netloc:
-        _, _, hostname = parts.netloc.partition("@")
-    else:
-        hostname = parts.netloc
-
-    url = f"{parts.scheme}://{hostname}{parts.path}"
-
-    assert username is not None
-    assert password is not None
-
-    return LoginInfo(
-        url=url,
-        username=username,
-        password=password,
-    )
-
-
-def parse_login_env(name: str) -> Optional[LoginInfo]:
-    spec = os.environ.get(name)
-    if spec is None:
-        return None
-    return parse_login(spec)
+from typing import Iterator, Optional, Tuple
 
 
 def _wait_port_open(port: int, count: int, pause: float = 1) -> None:
@@ -170,51 +123,3 @@ def server_process(
         except subprocess.TimeoutExpired:
             logger.warning("Kill process %d", process.pid)
             process.kill()
-
-
-@contextlib.asynccontextmanager
-async def client_context(login: LoginInfo, cookies: List[Any]) -> AsyncIterator[APIClient]:
-    """
-    Save/restore cookies from login and yield APIClient
-    """
-
-    http = aiohttp.ClientSession(
-        cookies=login.cookies,
-    )
-
-    url = login.url
-    username = login.username
-    password = login.password
-
-    client: Optional[APIClient] = None
-
-    if login.cookies:
-        client = await create_client(
-            url=url,
-            http=http,
-            logout_when_close=False,
-        )
-
-        if client.api_version is None:
-            # the cookies seem expired
-            client = None
-
-    if client is None:
-        client = await create_client(
-            url=url,
-            username=username,
-            password=password,
-            logout_when_close=False,
-            http=http,
-        )
-
-    new_cookies = []
-    for item in list(http.cookie_jar):
-        assert isinstance(item, Morsel)
-        new_cookies.append((item.key, item))
-
-    cookies[:] = new_cookies
-
-    async with http:
-        async with client:
-            yield client
