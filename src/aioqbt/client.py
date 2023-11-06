@@ -180,16 +180,27 @@ class APIClient:
         """
         Send an HTTP request and return a response object.
 
-        Response objects need close after use.
+        Argument ``method`` specifies the HTTP method (e.g. ``GET``)
+        while ``endpoint`` the API endpoint (e.g. ``torrents/info``).
 
-        :param str method: request method
-        :param str endpoint: endpoint path, e.g. ``torrents/info``
+        ``params`` forms the query string of the request URL.
+        ``data`` is the payload in the request body.
+        See the underlying :meth:`ClientSession.request <aiohttp.ClientSession.request>`
+        for their allowed values.
+
+        ``max_attempts`` is the maximum number of attempts when the remote responds status
+        429 (Too many requests), 503 (Service unavailable), or 502 (Bad gateway).
+
+        The result is :class:`aiohttp.ClientResponse`, and should be used in ``async with``.
+
+        :param str method: HTTP method.
+        :param str endpoint: API endpoint.
         :param params: parameters in query string
         :param data: data in request body
         :param int max_attempts: maximum number of attempts
         :param float retry_delay: maximum delay between attempts
         :param ssl: :class:`~ssl.SSLContext`, optional
-        :raise APIError: API errors
+        :raise APIError: API errors (non-``200`` status).
         :raise aiohttp.ClientError: connection errors
         :return: :class:`~aiohttp.ClientResponse`
         """
@@ -533,7 +544,7 @@ async def create_client(
     Create :class:`APIClient`.
 
     When both ``username`` and ``password`` are given,
-    the returned client will be authenticated successfully and automatically configured.
+    the returned client will have been successfully authenticated and automatically configured.
     Otherwise, :exc:`LoginError <aioqbt.exc.LoginError>` is raised.
 
     If they are omitted, :meth:`client.auth.login() <.AuthAPI.login>` need to be called manually.

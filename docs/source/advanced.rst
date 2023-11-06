@@ -5,20 +5,14 @@ Advanced
 Direct requests
 ---------------
 
-:class:`.APIClient` provides :meth:`.APIClient.request` to access API endpoints directly.
+:meth:`.APIClient.request` is a low-level interface to access API endpoints, and
+returns a response object.
 
-Both HTTP method (GET/POST) and endpoint are needed to specify.
-URL parameters are passed as a dict to argument ``params``
-while POST request data are passed to keyword argument ``data``.
-They are then passed to the underlying :meth:`aiohttp.ClientSession.request`.
+The use cases are not limited to accessing unsupported API endpoints,
+or reducing type conversion overhead.
 
-The returned result is :class:`aiohttp.ClientResponse` if succeeds.
-See `the aiohttp documentation <https://docs.aiohttp.org/en/stable/client.html>`_ for details.
-The method raises a subclass of :exc:`aioqbt.exc.APIError` if API error occurs, or
-:exc:`aiohttp.ClientError` if connection error.
-
-Convenient methods are included in the client to deal with :class:`~aiohttp.ClientResponse`
-and result in nice formats:
+There are two helper methods in the client to deal with the response object.
+They result in nice formats:
 
     - :meth:`~.APIClient.request_json` returns JSON-decoded object.
     - :meth:`~.APIClient.request_text` returns ``str``.

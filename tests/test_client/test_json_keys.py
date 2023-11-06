@@ -7,7 +7,7 @@ Rough steps:
 2. Use a memo object to store API type and its data
 3a. For @declarative, ObjectMapperProxy will feed memo data
 3b. For TypedDict, feed data manually
-4. Comparing type annotations and its data recevied
+4. Comparing type annotations and its data received
 
 Currently,
 - New fields are reported in both @declarative types and TypedDict.

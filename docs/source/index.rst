@@ -1,10 +1,12 @@
 Welcome to aioqbt's documentation!
 ==================================
 
-**aioqbt** is a Python API library for qBittorrent built on
+**aioqbt** is a Python library for qBittorrent WebAPI.
+It is built on
 `asyncio <https://docs.python.org/3/library/asyncio.html>`_ and
 `aiohttp <https://docs.aiohttp.org/en/stable/index.html>`_.
-It features typed interfaces to the qBittorrent WebUI API.
+
+The library features asynchronous typed interfaces and tests on qBittorrent up to v4.6.0.
 
 Check out :doc:`usage` section for further information, including how to
 :ref:`install <installation>` the project.

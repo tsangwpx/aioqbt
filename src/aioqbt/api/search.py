@@ -16,7 +16,14 @@ from aioqbt.version import APIVersion
 
 
 class SearchAPI(APIGroup):
-    """Search API methods."""
+    """
+    Search APIs.
+
+    .. note::
+
+        Search API is experimental. Methods and results may change without notice.
+
+    """
 
     async def start(
         self,

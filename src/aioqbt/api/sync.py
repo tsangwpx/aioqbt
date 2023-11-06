@@ -24,15 +24,10 @@ __all__ = ("SyncAPI",)
 
 class SyncAPI(APIGroup):
     """
-    API methods under ``sync``.
+    Sync APIs.
 
-    In Sync APIs, entries may be omitted in the returned dict objects
-    if their values are unchanged.
-
-    .. note::
-
-        Sync API support is experimental. Methods and results may
-        change without notice.
+    In Sync APIs, changes between requests are returned in dict-like objects.
+    Keys may be omitted if their values are unchanged.
 
     """
 
@@ -40,6 +35,16 @@ class SyncAPI(APIGroup):
         self,
         rid: Optional[int] = None,
     ) -> SyncMainData:
+        """
+        Obtain sync data.
+
+        ``rid`` in the previous sync data may be passed to the ``rid`` argument
+        to obtain a difference update.
+
+        If ``full_update=True`` in the resultant object, the data is a full update.
+        Otherwise, the data only contains changes since the last sync request.
+
+        """
         params = ParamDict()
         params.optional_int("rid", rid)
 
@@ -55,6 +60,12 @@ class SyncAPI(APIGroup):
         hash: InfoHash,
         rid: Optional[int] = None,
     ) -> SyncTorrentPeers:
+        """
+        Obtain peers for a torrent.
+
+        ``rid`` and ``full_update`` share similar meanings in :meth:`.maindata`.
+
+        """
         params = ParamDict.with_hash(hash)
         params.optional_int("rid", rid)
 

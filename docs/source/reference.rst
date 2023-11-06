@@ -8,13 +8,21 @@ Client
 
 .. automodule:: aioqbt.client
 
+Create client
+----------------
+
 .. autofunction:: create_client
+
+Client
+----------------
 
 .. autoclass:: APIClient()
 
     .. autoproperty:: app
     .. autoproperty:: auth
     .. autoproperty:: log
+    .. autoproperty:: rss
+    .. autoproperty:: search
     .. autoproperty:: sync
     .. autoproperty:: torrents
     .. autoproperty:: transfer
@@ -31,10 +39,12 @@ Client
 
 .. autoclass:: APIGroup()
 
+
 APIs
 ================
 
 .. automodule:: aioqbt.api
+
 
 Torrents
 ----------------
@@ -43,15 +53,19 @@ Torrents
     :members:
     :undoc-members:
 
+
+AddFormBuilder
+----------------
 .. autoclass:: AddFormBuilder()
     :members:
     :undoc-members:
-    :exclude-members: client_version, api_version
+    :exclude-members: client_version, api_version, add_url, add_torrent
     :member-order: bysource
 
 
 App
 ----------------
+
 .. autoclass:: AppAPI()
     :members:
     :undoc-members:
@@ -59,6 +73,7 @@ App
 
 Auth
 ----------------
+
 .. autoclass:: AuthAPI()
     :members:
     :undoc-members:
@@ -66,6 +81,7 @@ Auth
 
 Log
 ----------------
+
 .. autoclass:: LogAPI()
     :members:
     :undoc-members:
@@ -73,6 +89,7 @@ Log
 
 Sync
 ----------------
+
 .. autoclass:: SyncAPI()
     :members:
     :undoc-members:
@@ -80,6 +97,7 @@ Sync
 
 Transfer
 ----------------
+
 .. autoclass:: TransferAPI()
     :members:
     :undoc-members:
@@ -100,12 +118,6 @@ Search
     :members:
     :undoc-members:
 
-
-API types
-================
-
-.. automodule:: aioqbt.api.types
-    :synopsis: Constants and data structures
 
 Constants
 ---------------
@@ -149,6 +161,7 @@ Constants
 .. autoclass:: ConnectionStatus()
     :members:
     :undoc-members:
+
 
 Data structures
 ----------------
@@ -274,9 +287,9 @@ Data structures
     :undoc-members:
 
 
-
 Utilities
 ================
+
 
 bittorrent
 --------------------------------
@@ -293,6 +306,7 @@ bittorrent
     * ``InfoHashes`` is an iterable of ``InfoHash``.
     * ``InfoHashOrAll`` is an extension to ``InfoHashes``. It allow the string
       literal ``all``, which specifies all torrents in some API methods.
+
 
 chrono
 --------------------------------
@@ -330,6 +344,7 @@ chrono
     .. attribute:: DAYS
         :type: .TimeUnit
 
+
 version
 -------
 
@@ -341,8 +356,13 @@ version
 .. autoclass:: APIVersion
     :members:
 
+
 Exceptions
 ==========
+
+
+aioqbt.exc
+----------
 
 .. automodule:: aioqbt.exc
 

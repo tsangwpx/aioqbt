@@ -47,7 +47,12 @@ def _process_item(
 
 class RSSAPI(APIGroup):
     """
-    ``rss/*`` endpoints.
+    RSS APIs
+
+    .. note::
+
+        RSS API is experimental. Methods and results may change without notice.
+
     """
 
     async def add_folder(self, path: str) -> None:
@@ -116,7 +121,7 @@ class RSSAPI(APIGroup):
         """
         Get the root folder, which consists of all feeds and sub-folders.
 
-        If `with_data=True`, feed title and a list of articles will also be available.
+        If ``with_data=True``, feed title and a list of articles will also be available.
         See :class:`~.RSSFeed`.
         """
         params = ParamDict()

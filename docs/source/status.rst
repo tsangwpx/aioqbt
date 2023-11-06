@@ -43,11 +43,11 @@ and the corresponding attributes in :class:`~aioqbt.client.APIClient`.
       -
 
     * - :APIWiki:`RSS <#rss-experimental>`
-      -
-      - Unsupported
+      - :class:`~.RSSAPI`
+      - *experimental!*
 
     * - :APIWiki:`Search <#search>`
-      -
-      - Unsupported
+      - :class:`~.SearchAPI`
+      - *experimental!*
 
-Feature requests are welcome on :issue:`GitHub issues <>`.
+Feature / pull requests and are welcome on `GitHub <https://github.com/tsangwpx/aioqbt>`_.

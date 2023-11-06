@@ -134,8 +134,8 @@ Output:
 
 .. code-block:: text
 
-    Version v4.5.5
-    API 2.8.19
+    Version v4.6.0
+    API 2.9.2
     <TorrentInfo 75439d5de343999ab377c617c2c647902956e282 downloading 'ubuntu-22.04.3-desktop-amd64.iso'>
 
 

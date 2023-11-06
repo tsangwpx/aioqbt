@@ -928,37 +928,35 @@ class TorrentsAPI(APIGroup):
 @dataclasses.dataclass
 class AddFormBuilder:
     """
-    Build :class:`~aiohttp.FormData` used in :meth:`.TorrentsAPI.add`.
+    Build :class:`aiohttp.FormData` used in :meth:`.TorrentsAPI.add`.
 
-    Most builder methods return a modified copy of itself.
-    Method chaining is desirable to generate the final :class:`~aiohttp.FormData`.
+    AddFormBuilder is designed in fluent interface.
+    Most of its methods return a modified copy of the builder.
 
-    Here is an example to illustrate the usage::
+    Here is an example to illustrate::
 
-        # Create AddFormBuilder from a particular client
-        builder = AddFormBuilder.with_client(client)
+        await client.torrent.add(
+            # Create a builder with a particular client
+            AddFormBuilder.with_client(client)
 
-        # Set torrent category to "linux"
-        builder = builder.category("linux")
+            # Set torrent category to "linux"
+            .category("linux")
 
-        # Set ratio limit to 10
-        builder = builder.ratio_limit(10)
+            # Set ratio limit to 10
+            .ratio_limit(10)
 
-        # Add a torrent by its info hash (debian-11.7.0-amd64-netinst.iso)
-        builder = builder.include_url("6f84758b0ddd8dc05840bf932a77935d8b5b8b93")
+            # Add a torrent by its info hash (debian-11.7.0-amd64-netinst.iso)
+            .include_url("6f84758b0ddd8dc05840bf932a77935d8b5b8b93")
 
-        # Add a torrent by URL/magnet link (debian-11.6.0-amd64-netinst.iso)
-        magnet_link = "magnet:?xt=urn:btih:6d4795dee70aeb88e03e5336ca7c9fcf0a1e206d"
-        builder = builder.include_url(magnet_link)
+            # Add a torrent by URL/magnet link (debian-11.6.0-amd64-netinst.iso)
+            .include_url("magnet:?xt=urn:btih:6d4795dee70aeb88e03e5336ca7c9fcf0a1e206d")
 
-        # Upload a torrent with its bytes data and name
-        builder = builder.include_url(file_bytes, "debian-12.0.0-amd64-netinst.iso")
+            # Upload a torrent with its bytes data and name
+            .include_url(file_bytes, "debian-12.0.0-amd64-netinst.iso")
 
-        # Generate FormData object
-        form = builder.build()
-
-        # Add torrents to client
-        await client.torrents.add(form)
+            # Generate FormData object
+            .build()
+        )
 
     See also :APIWiki:`torrents/add <#add-new-torrent>`.
 

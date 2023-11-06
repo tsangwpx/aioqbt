@@ -2,9 +2,12 @@
 
 [![Documentation Status](https://readthedocs.org/projects/aioqbt/badge/?version=latest)](https://aioqbt.readthedocs.io/en/latest/?badge=latest)
 
-API library for qBittorrent with asyncio.
+Python library for qBittorrent WebAPI with asyncio.
 
-It features async typed APIs and object-based results.
+Features:
+* Async typed interfaces.
+* Complete qBittorrent WebAPI.
+* Tested with qBittorrent v4.1.5 to v4.6.0 on Debian/Ubuntu.
 
 ## Documentation
 
@@ -21,11 +24,11 @@ $ pip install aioqbt
 ```python
 import asyncio
 
+from aioqbt.api import InfoFilter
 from aioqbt.client import create_client
-from aioqbt.api.types import InfoFilter
 
 
-async def run():
+async def main():
     client = await create_client(
         "http://localhost:8080/api/v2/",
         username="admin",
@@ -34,17 +37,17 @@ async def run():
 
     async with client:
         # print client and API versions
-        print(await client.app.version())  # v4.2.5
-        print(await client.app.webapi_version())  # 2.5.1
+        print(await client.app.version())  # v4.6.0
+        print(await client.app.webapi_version())  # 2.9.2
 
         # print torrents in downloading
         for info in await client.torrents.info(filter=InfoFilter.DOWNLOADING):
             print(f"{info.added_on.isoformat()} added {info.name!r}")
-            # 2022-09-10T17:59:00 added 'debian-11.5.0-amd64-netinst.iso'
+            # 2023-11-06T17:59:00 added 'ubuntu-22.04.3-desktop-amd64.iso'
 
 
 if __name__ == '__main__':
-    asyncio.run(run())
+    asyncio.run(main())
 ```
 
 See [detailed usage on Read the Docs][1].
