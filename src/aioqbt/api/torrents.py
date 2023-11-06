@@ -1032,24 +1032,24 @@ class AddFormBuilder:
         return self.include_file(data, filename)  # pragma: no cover
 
     @copy_self
-    def savepath(self, savepath: StrPath) -> Self:
+    def savepath(self, savepath: Optional[StrPath]) -> Self:
         """Set ``savepath`` value."""
-        self._savepath = _convert_path(savepath)
+        self._savepath = None if savepath is None else _convert_path(savepath)
         return self
 
     @copy_self
-    def download_path(self, download_path: StrPath) -> Self:
+    def download_path(self, download_path: Optional[StrPath]) -> Self:
         """
         Set ``downloadPath`` value.
 
         Also use :meth:`use_download_path(True) <.use_download_path>` to enable download path.
         """
         # API v2.8.4
-        self._download_path = _convert_path(download_path)
+        self._download_path = None if download_path is None else _convert_path(download_path)
         return self
 
     @copy_self
-    def use_download_path(self, use_download_path: bool) -> Self:
+    def use_download_path(self, use_download_path: Optional[bool]) -> Self:
         """
         Set ``useDownloadPath`` value.
         """
@@ -1058,19 +1058,19 @@ class AddFormBuilder:
         return self
 
     @copy_self
-    def cookie(self, cookie: str) -> Self:
+    def cookie(self, cookie: Optional[str]) -> Self:
         """Set ``cookie`` value."""
         self._cookie = cookie
         return self
 
     @copy_self
-    def category(self, category: str) -> Self:
+    def category(self, category: Optional[str]) -> Self:
         """Set ``category`` value."""
         self._category = category
         return self
 
     @copy_self
-    def tags(self, tags: Iterable[str]) -> Self:
+    def tags(self, tags: Optional[Iterable[str]]) -> Self:
         """
         Associate torrents being added with tags.
 
@@ -1078,6 +1078,9 @@ class AddFormBuilder:
 
         :param tags: list of tags.
         """
+        if tags is None:
+            self._tags = None
+            return self
 
         # API 2.6.2
         _check_iterable_except_str("tags", tags)
@@ -1095,19 +1098,19 @@ class AddFormBuilder:
         return self
 
     @copy_self
-    def skip_checking(self, skip_checking: bool) -> Self:
+    def skip_checking(self, skip_checking: Optional[bool]) -> Self:
         """Set ``skip_checking`` value."""
         self._skip_checking = skip_checking
         return self
 
     @copy_self
-    def paused(self, paused: bool) -> Self:
+    def paused(self, paused: Optional[bool]) -> Self:
         """Set ``paused`` value."""
         self._paused = paused
         return self
 
     @copy_self
-    def root_folder(self, root_folder: bool) -> Self:
+    def root_folder(self, root_folder: Optional[bool]) -> Self:
         """
         Set ``root_folder`` value.
 
@@ -1117,40 +1120,43 @@ class AddFormBuilder:
         return self
 
     @copy_self
-    def rename(self, rename: str) -> Self:
+    def rename(self, rename: Optional[str]) -> Self:
         """Set ``rename`` value, which is the new torrent name."""
         self._rename = rename
         return self
 
     @copy_self
-    def up_limit(self, up_limit: int) -> Self:
+    def up_limit(self, up_limit: Optional[int]) -> Self:
         """Set ``upLimit`` in bytes/s"""
         self._up_limit = up_limit
         return self
 
     @copy_self
-    def dl_limit(self, dl_limit: int) -> Self:
+    def dl_limit(self, dl_limit: Optional[int]) -> Self:
         """Set ``dlLimit`` in bytes/s"""
         self._dl_limit = dl_limit
         return self
 
     @copy_self
     @since((2, 8, 1))
-    def ratio_limit(self, ratio_limit: Union[float, RatioLimits]) -> Self:
+    def ratio_limit(self, ratio_limit: Union[float, RatioLimits, None]) -> Self:
         """Set ``ratioLimit`` value."""
         # API 2.8.1
-        self._ratio_limit = float(ratio_limit)
+        self._ratio_limit = None if ratio_limit is None else float(ratio_limit)
         return self
 
     @copy_self
     @since((2, 8, 1))
     def seeding_time_limit(
         self,
-        seeding_time_limit: Union[timedelta, Minutes, SeedingTimeLimits],
+        seeding_time_limit: Union[timedelta, Minutes, SeedingTimeLimits, None],
     ) -> Self:
         """Set ``seedingTimeLimit`` value."""
         # API 2.8.1
-        self._seeding_time_limit = int(_convert_duration(seeding_time_limit, TimeUnit.MINUTES))
+        if seeding_time_limit is None:
+            self._seeding_time_limit = None
+        else:
+            self._seeding_time_limit = int(_convert_duration(seeding_time_limit, TimeUnit.MINUTES))
         return self
 
     @copy_self
@@ -1169,19 +1175,19 @@ class AddFormBuilder:
         return self
 
     @copy_self
-    def auto_tmm(self, auto_tmm: bool) -> Self:
+    def auto_tmm(self, auto_tmm: Optional[bool]) -> Self:
         """Set ``autoTMM`` value."""
         self._auto_tmm = auto_tmm
         return self
 
     @copy_self
-    def sequential_download(self, sequential_download: bool) -> Self:
+    def sequential_download(self, sequential_download: Optional[bool]) -> Self:
         """Set ``sequentialDownload`` value."""
         self._sequential_download = sequential_download
         return self
 
     @copy_self
-    def first_last_piece_prio(self, first_last_piece_prio: bool) -> Self:
+    def first_last_piece_prio(self, first_last_piece_prio: Optional[bool]) -> Self:
         """Set ``firstLastPiecePrio`` value."""
         self._first_last_piece_prio = first_last_piece_prio
         return self
@@ -1194,17 +1200,17 @@ class AddFormBuilder:
         return self
 
     @copy_self
-    def stop_condition(self, stop_condition: StopCondition) -> Self:
+    def stop_condition(self, stop_condition: Optional[StopCondition]) -> Self:
         """Set ``stopCondition`` value."""
         # API v2.8.15
-        self._stop_condition = str(stop_condition)
+        self._stop_condition = None if stop_condition is None else str(stop_condition)
         return self
 
     @copy_self
-    def content_layout(self, content_layout: ContentLayout) -> Self:
+    def content_layout(self, content_layout: Optional[ContentLayout]) -> Self:
         """Set ``contentLayout`` value."""
         # API v2.7.0
-        self._content_layout = str(content_layout)
+        self._content_layout = None if content_layout is None else str(content_layout)
         return self
 
     def build(self) -> aiohttp.FormData:
@@ -1219,9 +1225,14 @@ class AddFormBuilder:
         form = aiohttp.FormData()
 
         if self._urls:
-            # XXX: urllib.parse.quote may be useful to escape character.
-            # Probably 4.1.6???
-            form.add_field("urls", "\n".join(self._urls), content_type="text/plain")
+            content_type = None
+            if APIVersion.compare(self.api_version, (2, 6, 0)) < 0:
+                # Force multipart/form-data with content_type
+                # Workaround issue in qBittorrent 4.1 (4.2?)
+                # See https://github.com/qbittorrent/qBittorrent/pull/10458
+                content_type = "text/plain"
+
+            form.add_field("urls", "\n".join(self._urls), content_type=content_type)
 
         for filedata, filename in self._files:
             form.add_field(
