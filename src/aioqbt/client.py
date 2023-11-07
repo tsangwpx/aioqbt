@@ -580,20 +580,16 @@ async def create_client(
             await client.close()
             raise
 
-    if http is not None or username is not None:
-        # version and webapi_version require logged-in cookies
-        # access them if username is provided or http is external
-
-        try:
-            client_version, api_version = await asyncio.gather(
-                client.app.version(),
-                client.app.webapi_version(),
-            )
-        except exc.ForbiddenError:
-            pass
-        else:
-            client.client_version = ClientVersion.parse(client_version)
-            client.api_version = APIVersion.parse(api_version)
+    try:
+        client_version, api_version = await asyncio.gather(
+            client.app.version(),
+            client.app.webapi_version(),
+        )
+    except exc.ForbiddenError:
+        pass
+    else:
+        client.client_version = ClientVersion.parse(client_version)
+        client.api_version = APIVersion.parse(api_version)
 
     return client
 
