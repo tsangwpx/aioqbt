@@ -22,3 +22,12 @@ def get_info_hash(obj: InfoHash) -> str:
         raise ValueError("info hash is a hexadecimal string of 40 or 60 characters")
 
     return obj
+
+
+def _info_hash_str(value: InfoHash) -> str:
+    """Convert info hash to str"""
+
+    if isinstance(value, bytes):
+        return value.hex()
+
+    return value

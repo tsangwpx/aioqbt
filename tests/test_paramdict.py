@@ -2,7 +2,7 @@ import copy
 import math
 from datetime import timedelta
 from pathlib import PurePosixPath, PureWindowsPath
-from typing import Any
+from typing import Any, Union
 
 import pytest
 
@@ -50,10 +50,19 @@ def test_init():
     assert pd3 == pd
 
 
-def test_hash_factories():
-    hash = "0" * 40
+@pytest.mark.parametrize("kind", ["str", "bytes"])
+def test_hash_factories(kind: str) -> None:
+    def _convert_hash(value: str) -> Union[str, bytes]:
+        if kind == "str":
+            return value
+        elif kind == "bytes":
+            return bytes.fromhex(value)
+        else:
+            assert False, kind
 
-    pd = ParamDict.with_hash(hash)
+    hash = "0" * 40
+    hash_input = _convert_hash(hash)
+    pd = ParamDict.with_hash(hash_input)
     assert pd == {
         "hash": hash,
     }
@@ -62,7 +71,14 @@ def test_hash_factories():
         "0" * 40,
         "1" * 40,
     ]
-    pd = ParamDict.with_hashes(hashes)
+    hashes_input = [_convert_hash(s) for s in hashes]
+
+    pd = ParamDict.with_hashes(hashes_input)
+    assert pd == {
+        "hashes": "|".join(hashes),
+    }
+
+    pd = ParamDict.with_hashes_or_all(hashes_input)
     assert pd == {
         "hashes": "|".join(hashes),
     }

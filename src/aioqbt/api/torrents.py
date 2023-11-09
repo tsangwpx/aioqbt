@@ -22,7 +22,7 @@ from aioqbt.api.types import (
     Tracker,
     WebSeed,
 )
-from aioqbt.bittorrent import InfoHash, InfoHashes, InfoHashesOrAll, get_info_hash
+from aioqbt.bittorrent import InfoHash, InfoHashes, InfoHashesOrAll, _info_hash_str
 from aioqbt.chrono import Minutes, TimeUnit
 from aioqbt.client import APIClient, APIGroup, since, virtual
 from aioqbt.typing import StrPath
@@ -115,7 +115,7 @@ class TorrentsAPI(APIGroup):
         )
 
         if not hasattr(props, "hash"):
-            props.hash = get_info_hash(hash)
+            props.hash = _info_hash_str(hash)
 
         return props
 

@@ -18,7 +18,7 @@ from typing import (
 
 from typing_extensions import Self
 
-from aioqbt.bittorrent import InfoHash, InfoHashes, InfoHashesOrAll, get_info_hash
+from aioqbt.bittorrent import InfoHash, InfoHashes, InfoHashesOrAll, _info_hash_str
 from aioqbt.chrono import TimeUnit
 from aioqbt.typing import StrPath
 
@@ -313,7 +313,7 @@ class ParamDict(MutableMapping[str, str]):
             key = "hash"
 
         res = cls()
-        res.put(key, hash, param=param, prepare=get_info_hash)
+        res.put(key, hash, param=param, prepare=_info_hash_str)
         return res
 
     @classmethod
@@ -329,7 +329,7 @@ class ParamDict(MutableMapping[str, str]):
             key = "hashes"
 
         res = cls()
-        res.required_list(key, hashes, "|", param=param, prepare=get_info_hash, nonempty=nonempty)
+        res.required_list(key, hashes, "|", param=param, prepare=_info_hash_str, nonempty=nonempty)
         return res
 
     @classmethod
@@ -353,7 +353,7 @@ class ParamDict(MutableMapping[str, str]):
                 hashes,
                 "|",
                 param=param,
-                prepare=get_info_hash,
+                prepare=_info_hash_str,
                 nonempty=nonempty,
             )
         return res
