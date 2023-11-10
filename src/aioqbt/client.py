@@ -188,8 +188,12 @@ class APIClient:
         See the underlying :meth:`ClientSession.request <aiohttp.ClientSession.request>`
         for their allowed values.
 
-        ``max_attempts`` is the maximum number of attempts when the remote responds status
-        429 (Too many requests), 503 (Service unavailable), or 502 (Bad gateway).
+        ``max_attempts`` is the maximum number of attempts.
+        Retry is performed if two additional conditions are satisfied:
+
+        * ``GET`` or ``HEAD`` requets
+        * Remote disconnection, or repsonse status
+          429 (Too many requests), 503 (Service unavailable), or 502 (Bad gateway).
 
         The result is :class:`aiohttp.ClientResponse`, and should be used in ``async with``.
 
@@ -207,6 +211,8 @@ class APIClient:
 
         if max_attempts <= 0:
             raise ValueError(f"max_attempts <= 0: {max_attempts!r}")
+        elif method.upper() not in ("GET", "HEAD"):
+            max_attempts = 1
 
         if self._http is None:
             raise RuntimeError("closed client")
@@ -255,7 +261,6 @@ class APIClient:
                 )
             except (
                 aiohttp.ServerDisconnectedError,
-                aiohttp.ServerTimeoutError,
                 aiohttp.ClientResponseError,
             ) as ex:
                 self._logger.warning(
@@ -268,29 +273,60 @@ class APIClient:
                 )
                 last_exc = ex
 
-            if resp is None:
-                # the server is unreachable or the socket is reset
-                should_retry = attempt_count < max_attempts
-            else:
-                # the server is busy or in error
-                # retry in particular cases
-                should_retry = attempt_count < max_attempts and (
-                    resp.status in self._retry_statuses or _RETRY_AFTER in resp.headers
-                )
+            if attempt_count < max_attempts:
+                should_retry, sleeping_time = self._retry_strategy(retry_delay, last_exc, resp)
 
-            if should_retry:
-                attempt_count += 1
+                if should_retry:
+                    attempt_count += 1
+                    await asyncio.sleep(sleeping_time)
+                    continue
 
-                sleeping_time = retry_delay
-                if resp is not None:
-                    try:
-                        sleeping_time = min(sleeping_time, int(resp.headers[_RETRY_AFTER]))
-                    except (KeyError, ValueError):
-                        pass
+            self._handle_error(last_exc, resp, resp_body)
 
-                await asyncio.sleep(sleeping_time)
-            else:
-                self._handle_error(last_exc, resp, resp_body)
+    def _retry_strategy(
+        self,
+        retry_pause: float,
+        ex: BaseException,
+        resp: Optional[aiohttp.ClientResponse],
+    ) -> Tuple[bool, float]:
+        """
+        Ruturn a tuple of a bool and a sleeping time.
+
+        The bool indicate whether retry should be made.
+        """
+
+        if resp is None:
+            # The issues are related to sockets or network connections.
+            if isinstance(ex, aiohttp.ServerDisconnectedError):
+                # retry if TCP was probably reset
+                return True, retry_pause
+
+            return False, 0
+
+        if resp.status not in self._retry_statuses:
+            return False, 0
+
+        retry_after: Optional[int] = None
+        if _RETRY_AFTER in resp.headers:
+            # the remote seems busy or in maintenance
+            try:
+                # Support second format only
+                retry_after = int(resp.headers[_RETRY_AFTER])
+
+                if retry_after < 0:
+                    retry_after = None
+            except ValueError:
+                # Date format is not supported
+                # It usually suggests relatively long unavailability.
+                return False, 0
+
+        if retry_after is None:
+            return True, retry_pause
+        elif retry_after <= retry_pause:
+            # below our expected limit
+            return True, retry_after
+        else:
+            return False, 0
 
     def _handle_error(
         self,

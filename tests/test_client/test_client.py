@@ -115,9 +115,17 @@ async def test_server_disconnected():
 
 
 @pytest.mark.asyncio
-async def test_retry_after_header():
+@pytest.mark.parametrize(
+    "retry_after,expected_count",
+    [
+        ("0", 3),
+        ("9999", 1),
+        ("badvalue", 1),
+    ],
+)
+async def test_retry_after_header(retry_after: str, expected_count: int):
     max_attempts = 3
-    retry_delay = 1 / 1000  # 1 ms
+    retry_delay = 1  # 1s
 
     try_count = 0
 
@@ -125,10 +133,6 @@ async def test_retry_after_header():
     async def handler(request: aiohttp_web.BaseRequest):
         nonlocal try_count
         try_count += 1
-
-        retry_after = "1"
-        if try_count == 2:
-            retry_after = "badvalue"
 
         raise aiohttp_web.HTTPServiceUnavailable(
             headers={
@@ -147,7 +151,7 @@ async def test_retry_after_header():
             async with resp:
                 pass
 
-        assert try_count == max_attempts
+        assert try_count == expected_count
 
 
 @pytest.mark.parametrize(
