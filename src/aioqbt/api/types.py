@@ -848,7 +848,7 @@ class SyncServerState(TypedDict, total=False):
     write_cache_overload: str
     queued_io_jobs: int
     total_buffers_size: int
-    total_queue_size: int
+    total_queued_size: int
 
 
 @declarative
@@ -1077,6 +1077,8 @@ class RSSRule(TypedDict, total=False):
     """
 
     enabled: bool
+    priority: int
+
     useRegex: bool
     mustContain: str
     mustNotContain: str
@@ -1087,9 +1089,11 @@ class RSSRule(TypedDict, total=False):
     lastMatch: str
     ignoreDays: int
     addPaused: Optional[bool]
-    torrentContentLayout: str
+    torrentContentLayout: Optional[str]
     smartFilter: bool
     previouslyMatchedEpisodes: List[str]
+
+    torrentParams: Dict[str, Any]  # TODO update the type when upstream work done
 
 
 # Search related

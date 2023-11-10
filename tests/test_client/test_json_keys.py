@@ -21,7 +21,6 @@ import dataclasses
 import enum
 import os
 import warnings
-from types import ModuleType
 from typing import (
     Any,
     AsyncIterator,
@@ -45,12 +44,44 @@ from helper.torrent import TorrentData, make_torrent_files, make_torrent_single
 from helper.webapi import temporary_torrents
 from typing_extensions import Literal, get_args, get_origin, get_type_hints, is_typeddict
 
-from aioqbt.api import types as api_types
+from aioqbt import api
 from aioqbt.client import APIClient
 from aioqbt.mapper import ATTR_TYPE_INFO, ObjectMapper, _TypeInfo
 from aioqbt.version import APIVersion
 
 T = TypeVar("T")
+
+_SELECTED_TYPES = [
+    # app
+    api.BuildInfo,
+    api.Preferences,
+    api.NetworkInterface,
+    # torrents
+    api.TorrentInfo,
+    api.TorrentProperties,
+    api.Tracker,
+    api.WebSeed,
+    api.FileEntry,
+    api.Category,
+    # log
+    api.LogMessage,
+    api.LogPeer,
+    # sync
+    api.SyncTorrentInfo,
+    api.SyncCategory,
+    api.SyncServerState,
+    api.SyncMainData,
+    # api.SyncPeer,
+    api.SyncTorrentPeers,
+    # transfer
+    api.TorrentInfo,
+    # RSS
+    api.RSSRule,
+    # api.RSSArticle,
+    # api.RSSFolder,
+    # api.RSSFeed,
+    # Search omitted
+]
 
 
 class Memo:
@@ -157,6 +188,7 @@ async def activities(
 
     hashes = [s.hash for s in samples]
     category = "test_api_types"
+    rss_rule_name = "json_keys_rule"
     await client.torrents.create_category(category, "")
 
     async with temporary_torrents(client, *samples):
@@ -184,20 +216,25 @@ async def activities(
         await client.log.main()
         await client.log.peers()
 
-        memo.add(api_types.Preferences, await client.app.preferences())
+        memo.add(api.Preferences, await client.app.preferences())
 
         maindata = await client.sync.maindata()
-        memo.add_many(api_types.SyncTorrentInfo, maindata.torrents.values())
-        memo.add_many(api_types.SyncCategory, maindata.categories.values())
-        memo.add(api_types.SyncServerState, maindata.server_state)
+        memo.add_many(api.SyncTorrentInfo, maindata.torrents.values())
+        memo.add_many(api.SyncCategory, maindata.categories.values())
+        memo.add(api.SyncServerState, maindata.server_state)
 
     await client.torrents.remove_categories([category])
 
+    await client.rss.set_rule(rss_rule_name, api.RSSRule())
+    rss_rules = await client.rss.rules()
+    memo.add_many(api.RSSRule, rss_rules.values())
+    await client.rss.remove_rule(rss_rule_name)
 
-def _find_declarative_types(mod: ModuleType) -> List[Type[Any]]:
+
+def _find_declarative_types() -> List[Type[Any]]:
     return [
         value
-        for name, value in vars(mod).items()
+        for value in _SELECTED_TYPES
         if isinstance(value, type) and hasattr(value, ATTR_TYPE_INFO)
     ]
 
@@ -209,7 +246,7 @@ def _report_keys(cls: Type[Any], title: str, key: Iterable[str]):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("cls", _find_declarative_types(api_types))
+@pytest.mark.parametrize("cls", _find_declarative_types())
 async def test_find_unknown_attrs(
     cls: Type[T],
     memo: Memo,
@@ -246,8 +283,8 @@ async def test_find_unknown_attrs(
         _report_keys(cls, "missing", missing)
 
 
-def _find_typed_dict_types(mod: ModuleType) -> List[Type[Any]]:
-    return [value for name, value in vars(mod).items() if is_typeddict(value)]
+def _find_typed_dict_types() -> List[Type[Any]]:
+    return [value for value in _SELECTED_TYPES if is_typeddict(value)]
 
 
 def _json_types(annotation: Any) -> Set[Type[Any]]:
@@ -268,6 +305,9 @@ def _json_types(annotation: Any) -> Set[Type[Any]]:
                 return {str}
             else:
                 raise ValueError(f"Cannot coerce Enum {annotation} into JSON types")
+        elif is_typeddict(annotation):
+            # TypedDict runtime type is dict
+            return {dict}
 
         raise ValueError(annotation)
 
@@ -301,8 +341,8 @@ def _json_types(annotation: Any) -> Set[Type[Any]]:
         (None, {type(None)}),
         (Literal["aaa"], {str}),
         (Union[str, int], {str, int}),
-        (api_types.TorrentState, {str}),
-        (api_types.FilePriority, {int}),
+        (api.TorrentState, {str}),
+        (api.FilePriority, {int}),
     ],
 )
 def test_json_types(annotation: Any, expected: Set[Type[Any]]) -> None:
@@ -321,7 +361,7 @@ def test_json_types(annotation: Any, expected: Set[Type[Any]]) -> None:
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("cls", _find_typed_dict_types(api_types))
+@pytest.mark.parametrize("cls", _find_typed_dict_types())
 async def test_find_unknown_keys(
     cls: Type[T],
     memo: Memo,
