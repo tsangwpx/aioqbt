@@ -281,6 +281,14 @@ async def test_delete_error(client: APIClient):
 
 
 @pytest.mark.asyncio
+async def test_count(client: APIClient):
+    if APIVersion.compare(client.api_version, (2, 9, 3)) < 0:
+        pytest.skip("API 2.9.3")
+    count = await client.torrents.count()
+    assert isinstance(count, int)
+
+
+@pytest.mark.asyncio
 async def test_torrent_metadata(client: APIClient):
     sample = make_torrent_single("torrent_metadata")
     info_hash = sample.hash

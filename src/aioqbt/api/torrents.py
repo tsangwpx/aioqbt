@@ -45,6 +45,17 @@ class TorrentsAPI(APIGroup):
     API methods under ``torrents``.
     """
 
+    async def count(self) -> int:
+        """
+        Get the number of torrents
+        """
+        # new in v4.6.1
+        result = await self._request_text(
+            "GET",
+            "torrents/count",
+        )
+        return int(result)
+
     async def info(
         self,
         filter: Optional[str] = None,
