@@ -1,0 +1,39 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/python
+{
+	"name": "qBittorrent v4.6 from source (Qt5)",
+	"build": {
+		// See Dockerfile for details
+		"dockerfile": "../../tests/container/qbittorrent-4.6.Dockerfile",
+		"context": "../../tests/container",
+		"target": "devcontainer",
+		"args": {
+			"BASE_IMAGE": "debian:bookworm",
+			"LIBTORRENT_COMMIT": "v2.0.9",
+			"QBITTORRENT_COMMIT": "release-4.6.1"
+		}
+	},
+
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	"features": {
+		// https://github.com/devcontainers/features/tree/main/src/common-utils
+		"ghcr.io/devcontainers/features/common-utils:2": {
+			"username": "vscode"
+		}
+	},
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	"postCreateCommand": {
+		"venv": [ "setup-venv.sh" ],
+		"bashrc": [ "sh", "-c", "echo alias venv=\\'source ~/.venv/bin/activate\\' >> ~/.bashrc" ]
+	},
+
+	// Configure tool-specific properties.
+	// "customizations": {},
+
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	"remoteUser": "vscode"
+}
