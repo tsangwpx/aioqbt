@@ -1,11 +1,27 @@
+import base64
 import contextlib
+import hashlib
 import logging
 import socket
 import subprocess
 import sys
+import textwrap
 import time
 from pathlib import Path
-from typing import Iterator, Optional, Tuple
+from typing import Iterator, List, Optional, Sequence, Tuple, Union
+
+
+def _find_free_port(socket_type: int, host: str = "") -> int:
+    """Find a free port to use"""
+    assert socket_type in (socket.SOCK_STREAM, socket.SOCK_DGRAM)
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.bind((host, 0))
+    host, port = sock.getsockname()
+    sock.close()
+
+    assert isinstance(port, int)
+    return port
 
 
 def _wait_port_open(port: int, count: int, pause: float = 1) -> None:
@@ -32,10 +48,71 @@ def _wait_port_open(port: int, count: int, pause: float = 1) -> None:
     raise AssertionError("unreachable")
 
 
+def _combine_lists(*args: Sequence[str]) -> List[str]:
+    result: List[str] = []
+    for seq in args:
+        assert not isinstance(seq, str), "Oops."
+        result.extend(seq)
+
+    return result
+
+
+_DEFAULT_EXECUTABLE = (
+    # use line-buffered stdout to capture WebUI URL and credential
+    # even though it is not used currently: pytest --log-cli-level=DEBUG
+    "stdbuf",
+    "-oL",
+    "qbittorrent-nox",
+)
+
+
+def _process_executable(executable: Union[str, Sequence[str], None]) -> List[str]:
+    if executable is None:
+        executable = _DEFAULT_EXECUTABLE
+
+    if isinstance(executable, str):
+        return [executable]
+    else:
+        return list(executable)
+
+
+def _make_profile_conf(profile_path: Path) -> None:
+    """
+    Generate qBittorrent.conf in correct place
+
+    Default user and password are set to "admin" and "adminadmin" respectively.
+    """
+    username = "admin"
+    password = "adminadmin"
+
+    # PBKDF-HMAC-SHA512 parameters
+    salt = b"salt" * 4
+    assert len(salt) == 16
+    hash_name = "sha512"
+    iterations = 100000
+
+    derived_key = hashlib.pbkdf2_hmac(hash_name, password.encode("utf-8"), salt, iterations)
+    dk_b64 = base64.b64encode(derived_key).decode("ascii")
+    salt_b64 = base64.b64encode(salt).decode("ascii")
+
+    txt = rf"""
+    [Preferences]
+    WebUI\Username="{username}"
+    WebUI\Password_PBKDF2="@ByteArray({salt_b64}:{dk_b64})"
+    """
+    txt = textwrap.dedent(txt.lstrip("\n"))
+
+    conf_path = profile_path.joinpath("qBittorrent/config/qBittorrent.conf")
+    conf_path.parent.mkdir(exist_ok=True, parents=True)
+    conf_path.write_text(txt, encoding="utf-8")
+
+
 @contextlib.contextmanager
 def server_process(
     profile_path: Path,
     port: Optional[int] = None,
+    *,
+    executable: Union[str, Sequence[str], None] = None,
     logger: Optional[logging.Logger] = None,
 ) -> Iterator[Tuple[str, int]]:
     if sys.platform.startswith("win"):
@@ -44,18 +121,18 @@ def server_process(
     if logger is None:
         logger = logging.getLogger("server_process")
 
+    _make_profile_conf(profile_path)
+
     if port is None:
-        # Find a free port to use
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.bind(("127.0.0.1", 0))  # use IPv4 explicitly
-        host, port = sock.getsockname()
-        sock.close()
+        port = _find_free_port(socket.SOCK_STREAM, "127.0.0.1")
+
+    executable = _process_executable(executable)
 
     args = [
-        "/usr/bin/qbittorrent-nox",
         f"--profile={profile_path}",
         f"--webui-port={port:d}",
     ]
+    args = _combine_lists(executable, args)
 
     logger.debug("server command: %r", args)
 
@@ -104,12 +181,12 @@ def server_process(
             log_stdout_stderr(stdout, stderr)
 
     try:
+        _wait_port_open(port, 5)
+
         try:
             do_communicate(timeout=1 / 10)
         except subprocess.TimeoutExpired:
             pass
-
-        _wait_port_open(port, 5)
 
         # seem that the stdout is buffered on the child process.
         # WebUI URL cannot be read so "localhost" is a good guess.
