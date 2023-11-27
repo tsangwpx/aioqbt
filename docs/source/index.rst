@@ -6,7 +6,7 @@ It is built on
 `asyncio <https://docs.python.org/3/library/asyncio.html>`_ and
 `aiohttp <https://docs.aiohttp.org/en/stable/index.html>`_.
 
-The library features asynchronous typed interfaces and tests on qBittorrent up to v4.6.0.
+The library features asynchronous typed interfaces and tests on qBittorrent up to v4.6.1.
 
 Check out :doc:`usage` section for further information, including how to
 :ref:`install <installation>` the project.

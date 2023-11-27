@@ -37,8 +37,8 @@ async def main():
 
     async with client:
         # print client and API versions
-        print(await client.app.version())  # v4.6.0
-        print(await client.app.webapi_version())  # 2.9.2
+        print(await client.app.version())  # v4.6.1
+        print(await client.app.webapi_version())  # 2.9.3
 
         # print torrents in downloading
         for info in await client.torrents.info(filter=InfoFilter.DOWNLOADING):
