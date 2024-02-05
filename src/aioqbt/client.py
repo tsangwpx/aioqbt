@@ -585,6 +585,11 @@ async def create_client(
 
     If they are omitted, :meth:`client.auth.login() <.AuthAPI.login>` need to be called manually.
 
+    If the URL host is expresed in IP address instead of domain name,
+    session cookies are not preserved properly and
+    subsequent requests result in :exc:`~.ForbiddenError`.
+    See :issue:`GH-2 <2#issuecomment-1925461178>` for details.
+
     :param str url: URL to WebUI API, for example, ``https://localhost:8080/api/v2/``
     :param str username: login name
     :param str password: login password

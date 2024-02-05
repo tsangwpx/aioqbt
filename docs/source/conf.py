@@ -68,7 +68,7 @@ html_css_files = [
 
 # -- Options for extlinks
 extlinks = {
-    "issue": ("https://github.com/tsangwpx/aioqbt/issues/%s", "issue %s"),
+    "issue": ("https://github.com/tsangwpx/aioqbt/issues/%s", "GH-%s"),
     "APIWiki": (
         "https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)%s",
         "[APIWiki %s]",
