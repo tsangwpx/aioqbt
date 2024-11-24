@@ -206,6 +206,7 @@ async def test_str_methods(
     [
         ("dlLimit", AddFormBuilder.dl_limit),
         ("upLimit", AddFormBuilder.up_limit),
+        ("shareLimitAction", AddFormBuilder.share_limit_action),
     ],
 )
 @pytest.mark.parametrize(

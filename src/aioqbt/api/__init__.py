@@ -25,6 +25,7 @@ from aioqbt.api.types import InfoFilter as InfoFilter
 from aioqbt.api.types import PieceState as PieceState
 from aioqbt.api.types import RatioLimits as RatioLimits
 from aioqbt.api.types import SeedingTimeLimits as SeedingTimeLimits
+from aioqbt.api.types import ShareLimitAction as ShareLimitAction
 from aioqbt.api.types import StopCondition as StopCondition
 from aioqbt.api.types import TorrentState as TorrentState
 from aioqbt.api.types import TrackerStatus as TrackerStatus

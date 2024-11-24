@@ -137,6 +137,14 @@ class ContentLayout(StrEnum):
     NO_SUBFOLDER = "NoSubfolder"
 
 
+class ShareLimitAction(IntEnum):
+    DEFAULT = -1
+    STOP = 0
+    REMOVE = 1
+    ENABLE_SUPER_SEEDING = 2
+    REMOVE_WITH_CONTENT = 3
+
+
 class FilePriority(IntEnum):
     """
     File priority in :meth:`.TorrentsAPI.file_prio` and :attr:`.FileEntry.priority`.

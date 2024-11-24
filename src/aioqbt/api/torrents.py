@@ -16,6 +16,7 @@ from aioqbt.api.types import (
     InfoFilter,
     RatioLimits,
     SeedingTimeLimits,
+    ShareLimitAction,
     StopCondition,
     TorrentInfo,
     TorrentProperties,
@@ -1000,6 +1001,7 @@ class AddFormBuilder:
     _add_to_top_of_queue: Optional[bool] = None
     _stop_condition: Optional[str] = None
     _content_layout: Optional[str] = None
+    _share_limit_action: Optional[int] = None
 
     def __deepcopy__(self, memodict: Optional[Dict[int, Any]] = None) -> Self:
         return dataclasses.replace(
@@ -1222,6 +1224,16 @@ class AddFormBuilder:
         self._content_layout = None if content_layout is None else str(content_layout)
         return self
 
+    @copy_self
+    def share_limit_action(self, share_limit_action: Union[int, ShareLimitAction, None]) -> Self:
+        """Set ``shareLimitAction`` value"""
+        # API v2.11.0
+        if share_limit_action is not None:
+            share_limit_action = int(share_limit_action)
+
+        self._share_limit_action = share_limit_action
+        return self
+
     def build(self) -> aiohttp.FormData:
         """
         Build :class:`~aiohttp.FormData`.
@@ -1313,6 +1325,9 @@ class AddFormBuilder:
 
         if self._content_layout is not None:
             form.add_field("contentLayout", self._content_layout)
+
+        if self._share_limit_action is not None:
+            form.add_field("shareLimitAction", str(self._share_limit_action))
 
         return form
 
