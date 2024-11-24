@@ -81,6 +81,12 @@ class AppAPI(APIGroup):
             "app/defaultSavePath",
         )
 
+    async def send_test_email(self) -> None:
+        """
+        Try sending a test email to verify email settings.
+        """
+        await self._request_text("POST", "app/sendTestEmail")
+
     async def network_interface_list(self) -> List[NetworkInterface]:
         """Network interfaces."""
         # since v4.2.0, API v2.3.0
