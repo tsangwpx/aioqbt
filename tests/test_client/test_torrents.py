@@ -1,6 +1,6 @@
 import copy
 import datetime
-from pathlib import PurePath
+from pathlib import Path, PurePath
 from typing import Callable, List
 
 import pytest
@@ -19,6 +19,7 @@ from aioqbt.api.types import (
     StopCondition,
     TorrentInfo,
     TorrentProperties,
+    TorrentSSLParameters,
     TorrentState,
 )
 from aioqbt.client import APIClient
@@ -825,3 +826,81 @@ async def test_export(client: APIClient):
         data = await client.torrents.export(info_hash)
         assert isinstance(data, bytes)
         assert b"4:infod" in data
+
+
+@pytest.mark.asyncio
+async def test_ssl_parameters(client: APIClient, tmp_path: Path) -> None:
+    if APIVersion.compare(client.api_version, (2, 10, 4)) < 0:
+        pytest.skip("require API v2.10.4")
+
+    import shutil
+    import subprocess
+
+    if shutil.which("openssl") is None:
+        pytest.xfail("openssl command is unavailable")
+
+    cert_filename = "cert.pem"
+    privkey_filename = "privkey.pem"
+    dhparams_filename = "dhparams.pem"
+
+    # the cert, private key, and dh params are for testing purpose.
+    # Do NOT use it for cryptographic use.
+
+    cert_args = [
+        "openssl",
+        "req",
+        "-x509",
+        "-newkey",
+        # short key = fast key generation
+        "rsa:1024",
+        "-subj",
+        "/CN=www.example.com",
+        "-sha256",
+        "-nodes",
+        "-keyout",
+        privkey_filename,
+        "-out",
+        cert_filename,
+    ]
+    dh_args = [
+        "openssl",
+        "dhparam",
+        # -dasparam allow faster generation but probably insecure.
+        "-dsaparam",
+        "-out",
+        dhparams_filename,
+        "512",
+    ]
+
+    subprocess.run(
+        cert_args,
+        cwd=str(tmp_path),
+        check=True,
+        capture_output=True,
+    )
+    subprocess.run(
+        dh_args,
+        cwd=str(tmp_path),
+        check=True,
+        capture_output=True,
+    )
+
+    cert_pem = tmp_path.joinpath(cert_filename).read_text("ascii")
+    privkey_pem = tmp_path.joinpath(privkey_filename).read_text("ascii")
+    dhparams_pem = tmp_path.joinpath(dhparams_filename).read_text("ascii")
+
+    sample = make_torrent_single("ssl_parameters")
+    async with temporary_torrents(client, sample):
+        ssl_params = await client.torrents.ssl_parameters(sample.hash)
+
+        assert isinstance(ssl_params, TorrentSSLParameters)
+        assert isinstance(ssl_params.ssl_certificate, str)
+        assert isinstance(ssl_params.ssl_private_key, str)
+        assert isinstance(ssl_params.ssl_dh_params, str)
+
+        await client.torrents.set_ssl_parameters(
+            sample.hash,
+            cert_pem,
+            privkey_pem,
+            dhparams_pem,
+        )

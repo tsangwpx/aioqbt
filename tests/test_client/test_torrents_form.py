@@ -179,6 +179,9 @@ async def test_bool_methods(
         ("rename", AddFormBuilder.rename),
         ("stopCondition", AddFormBuilder.stop_condition),
         ("contentLayout", AddFormBuilder.content_layout),
+        ("ssl_certificate", AddFormBuilder.ssl_certificate),
+        ("ssl_private_key", AddFormBuilder.ssl_private_key),
+        ("ssl_dh_params", AddFormBuilder.ssl_dh_params),
     ],
 )
 @pytest.mark.parametrize(
@@ -186,6 +189,7 @@ async def test_bool_methods(
     [
         pytest.param(None, None, id="None"),
         pytest.param("", "", id="empty"),
+        pytest.param("plain text", "plain text", id="string"),
         pytest.param(EnumStr.HELLO, "hello", id="StrEnum"),
     ],
 )

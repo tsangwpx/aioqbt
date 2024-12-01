@@ -20,6 +20,7 @@ from aioqbt.api.types import (
     StopCondition,
     TorrentInfo,
     TorrentProperties,
+    TorrentSSLParameters,
     Tracker,
     WebSeed,
 )
@@ -936,6 +937,44 @@ class TorrentsAPI(APIGroup):
         async with resp:
             return await resp.read()
 
+    @since((2, 10, 4))
+    async def ssl_parameters(self, hash: InfoHash) -> TorrentSSLParameters:
+        """
+        Get SSL parameters
+        """
+
+        params = ParamDict.with_hash(hash)
+
+        return await self._request_mapped_object(
+            TorrentSSLParameters,
+            "GET",
+            "torrents/SSLParameters",
+            params=params,
+        )
+
+    @since((2, 10, 4))
+    async def set_ssl_parameters(
+        self,
+        hash: InfoHash,
+        ssl_certificate: str,
+        ssl_private_key: str,
+        ssl_dh_params: str,
+    ) -> None:
+        """
+        Set SSL parameters
+        """
+
+        data = ParamDict.with_hash(hash)
+        data.required_str("ssl_certificate", ssl_certificate)
+        data.required_str("ssl_private_key", ssl_private_key)
+        data.required_str("ssl_dh_params", ssl_dh_params)
+
+        await self._request_text(
+            "POST",
+            "torrents/setSSLParameters",
+            data=data,
+        )
+
 
 @dataclasses.dataclass
 class AddFormBuilder:
@@ -1002,6 +1041,10 @@ class AddFormBuilder:
     _stop_condition: Optional[str] = None
     _content_layout: Optional[str] = None
     _share_limit_action: Optional[int] = None
+
+    _ssl_certificate: Optional[str] = None
+    _ssl_private_key: Optional[str] = None
+    _ssl_dh_params: Optional[str] = None
 
     def __deepcopy__(self, memodict: Optional[Dict[int, Any]] = None) -> Self:
         return dataclasses.replace(
@@ -1234,6 +1277,37 @@ class AddFormBuilder:
         self._share_limit_action = share_limit_action
         return self
 
+    @copy_self
+    def ssl_certificate(self, ssl_certificate: Optional[str]) -> Self:
+        """
+        Set ``ssl_certificate`` value.
+
+        The certificate is stored in PEM format.
+        """
+        self._ssl_certificate = ssl_certificate
+        return self
+
+    @copy_self
+    def ssl_private_key(self, ssl_private_key: Optional[str]) -> Self:
+        """
+        Set ``ssl_private_key`` value.
+
+        The private key is stored in PEM format.
+        RSA and EC keys are supported.
+        """
+        self._ssl_private_key = ssl_private_key
+        return self
+
+    @copy_self
+    def ssl_dh_params(self, ssl_dh_params: Optional[str]) -> Self:
+        """
+        Set ``ssl_dh_params`` value.
+
+        The Diffie–Hellman key exchange parameters is stored in PEM format.
+        """
+        self._ssl_dh_params = ssl_dh_params
+        return self
+
     def build(self) -> aiohttp.FormData:
         """
         Build :class:`~aiohttp.FormData`.
@@ -1328,6 +1402,15 @@ class AddFormBuilder:
 
         if self._share_limit_action is not None:
             form.add_field("shareLimitAction", str(self._share_limit_action))
+
+        if self._ssl_certificate is not None:
+            form.add_field("ssl_certificate", self._ssl_certificate)
+
+        if self._ssl_private_key is not None:
+            form.add_field("ssl_private_key", self._ssl_private_key)
+
+        if self._ssl_dh_params is not None:
+            form.add_field("ssl_dh_params", self._ssl_dh_params)
 
         return form
 

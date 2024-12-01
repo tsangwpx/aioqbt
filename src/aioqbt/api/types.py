@@ -723,6 +723,16 @@ class Category:
 
 
 @declarative
+class TorrentSSLParameters:
+    """
+    See :meth:`.TorrentsAPI.ssl_parameters`.
+    """
+    ssl_certificate: str
+    ssl_private_key: str
+    ssl_dh_params: str
+
+
+@declarative
 class LogMessage:
     """
     See :meth:`.LogAPI.main`.
