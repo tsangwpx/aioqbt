@@ -108,7 +108,9 @@ async def test_server_disconnected():
             async with resp:
                 pass
 
-    assert try_count == max_attempts
+    # retry is also implemented in upstream library, since aiohttp 3.10
+    assert try_count >= max_attempts
+
     server.close()
     await server.wait_closed()
     await asyncio.wait(futures)
