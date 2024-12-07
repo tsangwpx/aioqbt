@@ -1,3 +1,5 @@
+import re
+
 import pytest
 from helper.lang import retry_assert
 
@@ -10,7 +12,7 @@ from aioqbt.version import APIVersion
 async def test_app(client: APIClient):
     version = await client.app.version()
     assert isinstance(version, str)
-    assert version.startswith("v4.")
+    assert re.match(r"^v\d+\.", version) is not None, version
 
     webapi_version = await client.app.webapi_version()
     assert isinstance(webapi_version, str)
