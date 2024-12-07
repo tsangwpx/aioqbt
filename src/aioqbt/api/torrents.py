@@ -42,6 +42,42 @@ def _check_iterable_except_str(param: str, value: Iterable[Any]) -> None:
         raise ValueError(f"{param!r} refused str as iterable")
 
 
+def _adapt_info_filter(
+    filter: str,
+    api_version: Optional[Tuple[int, int, int]],
+) -> str:
+    """
+    Normalize info filter across qBittorrent versions
+    and issue warnings about it
+    """
+
+    # Before API v2.11.0,
+    # RUNNING was called RESUMED
+    # STOPPED was called PAUSED
+
+    msg: Optional[str] = None
+
+    if APIVersion.compare(api_version, (2, 11, 0)) >= 0:
+        if filter == InfoFilter.RESUMED:
+            msg = "Please migrate RESUMED to RUNNING in qBittorrent v5"
+            filter = InfoFilter.RUNNING
+        elif filter == InfoFilter.PAUSED:
+            msg = "Please migrate PAUSED to STOPPED in qBittorrent v5"
+            filter = InfoFilter.STOPPED
+    else:
+        if filter == InfoFilter.RUNNING:
+            filter = InfoFilter.RESUMED
+        if filter == InfoFilter.STOPPED:
+            filter = InfoFilter.PAUSED
+
+    if msg is not None:
+        import warnings
+
+        warnings.warn(msg, DeprecationWarning, stacklevel=3)
+
+    return filter
+
+
 class TorrentsAPI(APIGroup):
     """
     API methods under ``torrents``.
@@ -91,7 +127,9 @@ class TorrentsAPI(APIGroup):
         :param hashes: A list of info hashes, or a str ``all``.
         :param tag: Tag filter.
         """
-        if isinstance(filter, InfoFilter):
+
+        if filter is not None:
+            filter = _adapt_info_filter(filter, self._client().api_version)
             filter = str(filter)
 
         if hashes is None:
@@ -199,35 +237,57 @@ class TorrentsAPI(APIGroup):
             params=ParamDict.with_hash(hash),
         )
 
-    async def pause(self, hashes: InfoHashesOrAll) -> None:
+    async def stop(self, hashes: InfoHashesOrAll) -> None:
         """
-        Pause torrents.
+        Stop torrents.
 
         Torrents can be specified by their info hashes.
-        Passing ``all`` pauses all torrents.
+        Passing ``all`` stops all torrents.
 
         """
+
+        client = self._client()
+
+        if APIVersion.compare(client.api_version, (2, 11, 0)) >= 0:
+            endpoint = "torrents/stop"
+        else:
+            endpoint = "torrents/pause"
 
         await self._request_text(
             "POST",
-            "torrents/pause",
+            endpoint,
+            data=ParamDict.with_hashes_or_all(hashes),
+        )
+
+    async def pause(self, hashes: InfoHashesOrAll) -> None:
+        """Alias of :meth:`.stop`."""
+        return await self.stop(hashes)
+
+    async def start(self, hashes: InfoHashesOrAll) -> None:
+        """
+        Start torrents.
+
+        Torrents can be specified by their info hashes.
+        Passing ``all`` starts all torrents.
+
+        """
+
+        client = self._client()
+
+        if APIVersion.compare(client.api_version, (2, 11, 0)) >= 0:
+            endpoint = "torrents/start"
+        else:
+            endpoint = "torrents/resume"
+
+        await self._request_text(
+            "POST",
+            endpoint,
             data=ParamDict.with_hashes_or_all(hashes),
         )
 
     async def resume(self, hashes: InfoHashesOrAll) -> None:
-        """
-        Resume torrents.
-
-        Torrents can be specified by their info hashes.
-        Passing ``all`` resumes all torrents.
-
-        """
-
-        await self._request_text(
-            "POST",
-            "torrents/resume",
-            data=ParamDict.with_hashes_or_all(hashes),
-        )
+        """Alias of :meth:`.start`."""
+        return await self.start(hashes)
 
     async def delete(self, hashes: InfoHashesOrAll, delete_files: bool) -> None:
         """
@@ -1027,6 +1087,7 @@ class AddFormBuilder:
     _tags: Optional[str] = None
     _skip_checking: Optional[bool] = None
     _paused: Optional[bool] = None
+    _stopped: Optional[bool] = None
     _root_folder: Optional[bool] = None
     _rename: Optional[str] = None
     _up_limit: Optional[int] = None
@@ -1160,7 +1221,30 @@ class AddFormBuilder:
     @copy_self
     def paused(self, paused: Optional[bool]) -> Self:
         """Set ``paused`` value."""
+
+        if APIVersion.compare(self.api_version, (2, 11, 0)) >= 0:
+            import warnings
+
+            warnings.warn(
+                "use stopped() instead of paused() in API v2.11.0 or later",
+                DeprecationWarning,
+                stacklevel=3,
+            )
+            self._stopped = paused
+
         self._paused = paused
+        return self
+
+    @copy_self
+    def stopped(self, stopped: Optional[bool]) -> Self:
+        """Set ``stopped`` value."""
+
+        if APIVersion.compare(self.api_version, (2, 11, 0)) < 0:
+            # also set the "paused" field but do not issue warnings
+            # older client would ignore the "stopped" field and use the "paused" field.
+            self._paused = stopped
+
+        self._stopped = stopped
         return self
 
     @copy_self
@@ -1360,6 +1444,9 @@ class AddFormBuilder:
 
         if self._paused is not None:
             form.add_field("paused", bool_str(self._paused))
+
+        if self._stopped is not None:
+            form.add_field("stopped", bool_str(self._stopped))
 
         if self._root_folder is not None:
             form.add_field("root_folder", bool_str(self._root_folder))

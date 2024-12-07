@@ -42,7 +42,7 @@ async def test_add(client: APIClient):
         .cookie("dummy=empty")
         .rename("add-renamed")
         .root_folder(True)
-        .paused(True)
+        .stopped(True)
         .skip_checking(False)  # skip checking cause first last piece prio become False
         .up_limit(up_limit)
         .dl_limit(dl_limit)
@@ -63,7 +63,8 @@ async def test_add(client: APIClient):
     assert info is not None, torrents
     assert info.name == "add-renamed"
     assert info.hash == sample.hash
-    assert info.state in {TorrentState.CHECKING_RESUME_DATA, TorrentState.PAUSED_DL}
+    assert isinstance(info.state, TorrentState)
+    assert info.state.is_checking() or info.state.is_stopped(), info.state
     assert info.up_limit == up_limit
     assert info.dl_limit == dl_limit
     assert info.seq_dl
@@ -151,7 +152,11 @@ async def test_add_stop_condition(client: APIClient):
         torrents = await client.torrents.info(hashes=(sample.hash,))
         assert len(torrents) == 1
         info = torrents[0]
-        assert info.state in {TorrentState.CHECKING_RESUME_DATA, TorrentState.PAUSED_DL}
+        assert info.state in {
+            TorrentState.CHECKING_RESUME_DATA,
+            TorrentState.STOPPED_DL,
+            TorrentState.PAUSED_DL,
+        }
 
     await assert_state()
 

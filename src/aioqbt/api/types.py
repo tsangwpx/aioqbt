@@ -27,7 +27,7 @@ class TorrentState(StrEnum):
     ERROR = "error"
     MISSING_FILES = "missingFiles"
     UPLOADING = "uploading"
-    PAUSED_UP = "pausedUP"
+    STOPPED_UP = "stoppedUP"
     QUEUED_UP = "queuedUP"
     STALLED_UP = "stalledUP"
     CHECKING_UP = "checkingUP"
@@ -35,7 +35,7 @@ class TorrentState(StrEnum):
     ALLOCATING = "allocating"
     DOWNLOADING = "downloading"
     META_DL = "metaDL"
-    PAUSED_DL = "pausedDL"
+    STOPPED_DL = "stoppedDL"
     QUEUED_DL = "queuedDL"
     STALLED_DL = "stalledDL"
     CHECKING_DL = "checkingDL"
@@ -44,24 +44,171 @@ class TorrentState(StrEnum):
     MOVING = "moving"
     UNKNOWN = "unknown"
 
+    # PAUSED_UP and PAUSED_DL were used in qBittorrent 4.x series
+    # they are replaced by STOPPED_UP and STOPPED_DL respectively in 5.x series
+    PAUSED_UP = "pausedUP"
+    PAUSED_DL = "pausedDL"
+
+    def is_checking(self) -> bool:
+        """
+        Return ``True`` if the state is
+
+        * :attr:`.CHECKING_DL`
+        * :attr:`.CHECKING_UP`
+        * :attr:`.CHECKING_RESUME_DATA`
+        """
+
+        return self in _CHECKING_STATES
+
+    def is_downloading(self) -> bool:
+        """
+        Return ``True`` if the state is
+
+        * :attr:`.DOWNLOADING`
+        * :attr:`.META_DL`
+        * :attr:`.STOPPED_DL`
+        * :attr:`.QUEUED_DL`
+        * :attr:`.STALLED_DL`
+        * :attr:`.CHECKING_DL`
+        * :attr:`.FORCED_DL`
+        * :attr:`.PAUSED_DL`
+        """
+
+        return self in _DOWNLOADING_STATES
+
+    def is_uploading(self) -> bool:
+        """
+        Return ``True`` if the state is
+
+        * :attr:`.UPLOADING`
+        * :attr:`.STALLED_UP`
+        * :attr:`.CHECKING_UP`
+        * :attr:`.QUEUED_UP`
+        * :attr:`.FORCED_UP`
+        """
+
+        return self in _UPLOADING_STATES
+
+    def is_completed(self) -> bool:
+        """
+        Return ``True`` if the state is
+
+        * :attr:`.UPLOADING`
+        * :attr:`.STALLED_UP`
+        * :attr:`.CHECKING_UP`
+        * :attr:`.STOPPED_UP`
+        * :attr:`.QUEUED_UP`
+        * :attr:`.FORCED_UP`
+        """
+
+        return self in _COMPLETED_STATES
+
+    def is_errored(self) -> bool:
+        """
+        Return ``True`` if the state is
+
+        * :attr:`.ERROR`
+        * :attr:`.MISSING_FILES`
+        """
+
+        return self in _ERRORED_STATES
+
+    def is_stopped(self) -> bool:
+        """
+        Return ``True`` if the state is
+
+        * :attr:`.STOPPED_UP`
+        * :attr:`.STOPPED_DL`
+        * :attr:`.PAUSED_UP`
+        * :attr:`.PAUSED_DL`
+        """
+
+        return self in _STOPPED_STATES
+
+    is_paused = is_stopped
+
+
+_CHECKING_STATES = frozenset(    (
+        TorrentState.CHECKING_DL,
+        TorrentState.CHECKING_UP,
+        TorrentState.CHECKING_RESUME_DATA,
+))
+
+_DOWNLOADING_STATES = frozenset(    {
+        TorrentState.DOWNLOADING,
+        TorrentState.META_DL,
+        TorrentState.STOPPED_DL,
+        TorrentState.QUEUED_DL,
+        TorrentState.STALLED_DL,
+        TorrentState.CHECKING_DL,
+        TorrentState.FORCED_DL,
+        TorrentState.PAUSED_DL,
+    }
+)
+
+_UPLOADING_STATES = frozenset(
+    {
+        TorrentState.UPLOADING,
+        TorrentState.STALLED_UP,
+        TorrentState.CHECKING_UP,
+        TorrentState.QUEUED_UP,
+        TorrentState.FORCED_UP,
+    }
+)
+
+_COMPLETED_STATES = frozenset(
+    {
+        TorrentState.UPLOADING,
+        TorrentState.STALLED_UP,
+        TorrentState.CHECKING_UP,
+        TorrentState.STOPPED_UP,
+        TorrentState.QUEUED_UP,
+        TorrentState.FORCED_UP,
+    }
+)
+
+_ERRORED_STATES = frozenset(
+    {
+        TorrentState.ERROR,
+        TorrentState.MISSING_FILES,
+    }
+)
+
+_STOPPED_STATES = frozenset(
+    {
+        TorrentState.STOPPED_UP,
+        TorrentState.STOPPED_DL,
+        TorrentState.PAUSED_UP,
+        TorrentState.PAUSED_DL,
+    }
+)
+
 
 class InfoFilter(StrEnum):
     """
     Torrent state filter in :meth:`.TorrentsAPI.info`.
+
+    :attr:`.RESUMED` and :attr:`.PAUSED` are removed in qBittorrent v5.
+    Please migrate to :attr:`.RUNNING` and :attr:`.PAUSED` respectively.
     """
 
     ALL = "all"
     DOWNLOADING = "downloading"
     SEEDING = "seeding"
     COMPLETED = "completed"
-    RESUMED = "resumed"
-    PAUSED = "paused"
+    RUNNING = "running"
+    STOPPED = "stopped"
     ACTIVE = "active"
     INACTIVE = "inactive"
     STALLED = "stalled"
     STALLED_UPLOADING = "stalled_uploading"
     STALLED_DOWNLOADING = "stalled_downloading"
+    CHECKING = "checking"
+    MOVING = "moving"
     ERRORED = "errored"
+
+    RESUMED = "resumed"
+    PAUSED = "paused"
 
 
 class PieceState(IntEnum):

@@ -16,7 +16,7 @@ async def temporary_torrents(
     paused: bool = True,
 ) -> AsyncIterator[List[TorrentInfo]]:
     builder = AddFormBuilder.with_client(client)
-    builder = builder.paused(paused)
+    builder = builder.stopped(paused)
 
     table: Dict[str, int] = {}
     for i, item in enumerate(samples):
