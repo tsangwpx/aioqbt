@@ -1,10 +1,11 @@
-# This Dockerfile builds qBittorrent v5.0 on debian sid with experimental.
+# This Dockerfile builds qBittorrent v5.0 on debian sid.
 # Modifications are likely required to compile the program.
+# To build with newer libraries, add "-t experimental" to apt-get commands.
 # Qt6 is used.
 
 # ARG BASE_IMAGE is not supported
 
-ARG LIBTORRENT_COMMIT=v2.0.9
+ARG LIBTORRENT_COMMIT=v2.0.10
 
 # master branch is currently v5.0alpha
 ARG QBITTORRENT_COMMIT=master
@@ -57,8 +58,8 @@ RUN set -eux; \
         rsync bash-completion vim less \
         build-essential ninja-build cmake \
         libssl-dev zlib1g-dev; \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends -t experimental \
-        libboost-dev qt6-base-dev qt6-tools-dev; \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        libboost-dev qt6-base-dev qt6-base-private-dev qt6-tools-dev; \
     rm -rf /var/lib/apt/lists/*
 
 COPY --from=checkout /data/libtorrent /data/libtorrent
@@ -90,8 +91,8 @@ RUN set -eux; \
     echo "deb http://deb.debian.org/debian experimental main" >> /etc/apt/sources.list.d/experimental.list; \
     apt-get update; \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        libssl3; \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends -t experimental \
+        libssl3t64; \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         libqt6core6 libqt6network6 libqt6sql6-sqlite libqt6xml6; \
     rm -rf /var/lib/apt/lists/*; \
     ldconfig; \

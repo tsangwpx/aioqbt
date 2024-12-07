@@ -26,8 +26,8 @@ BASE_PYTHON="$(_find_base_python)" || { echo 'Cannot find python'; exit 1; }
 "$BASE_PYTHON" -m venv --clear "$VIRTUAL_ENV"
 . "${VIRTUAL_ENV}/bin/activate"
 
-# pip>=19.* is required to build package with PEP-517
-python3 -m pip install --upgrade --force 'pip>=19.*'
+# pip>=19.0 is required to build package with PEP-517
+python3 -m pip install --upgrade --force 'pip>=19.0'
 
 [ $# -eq 0 ] && set -- '.[test]'
 python3 -m pip install "$@"

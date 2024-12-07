@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# /aioqbt is usually owned by different owner in container
+git config --global --add safe.directory /aioqbt
+
 sync-worktree.sh
 setup-venv.sh --editable '.[dev,test]'
 
