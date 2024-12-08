@@ -4,7 +4,7 @@ Types utilized and returned by API methods.
 from datetime import datetime, timedelta
 from typing import Any, Dict, Iterator, List, Mapping, Optional, Type, TypeVar, Union, overload
 
-from typing_extensions import Final, Literal, TypedDict
+from typing_extensions import Annotated, Final, Literal, TypedDict
 
 from aioqbt._compat import IntEnum, StrEnum
 from aioqbt.chrono import Minutes, TimeUnit
@@ -358,6 +358,7 @@ class BuildInfo:
     openssl: str
     zlib: str  # undocumented, found in API v2.5.1
     bitness: int
+    platform: Literal["linux", "macos", "windows", "unknown"]  # API v2.10.3
 
 
 class Preferences(TypedDict, total=False):
@@ -381,16 +382,19 @@ class Preferences(TypedDict, total=False):
     file_log_delete_old: bool
     file_log_age: int
     file_log_age_type: int
+    delete_torrent_content_files: bool  # API v2.10.2
 
     torrent_content_layout: str
     add_to_top_of_queue: bool
     create_subfolder_enabled: bool  # removed in v4.3.2
-    start_paused_enabled: bool
+    start_paused_enabled: bool  # removed in API v2.11.0, replaced by add_stopped_enabled
+    add_stopped_enabled: bool  # API v2.11.0
     torrent_stop_condition: str
     merge_trackers: bool
     auto_delete_mode: int
     preallocate_all: bool
     incomplete_files_ext: bool
+    use_unwanted_folder: bool
 
     auto_tmm_enabled: bool
     torrent_changed_tmm_enabled: bool
@@ -425,6 +429,8 @@ class Preferences(TypedDict, total=False):
     autorun_program: str
 
     listen_port: int
+    ssl_enabled: bool  # API v2.10.4
+    ssl_listen_port: int  # API v2.10.4
     random_port: bool
     upnp: bool
 
@@ -432,6 +438,16 @@ class Preferences(TypedDict, total=False):
     max_connec_per_torrent: int
     max_uploads: int
     max_uploads_per_torrent: int
+
+    # I2P, since API v2.9.6
+    i2p_enabled: bool
+    i2p_address: str
+    i2p_port: int
+    i2p_mixed_mode: bool
+    i2p_inbound_quantity: int
+    i2p_outbound_quantity: int
+    i2p_inbound_length: int
+    i2p_outbound_length: int
 
     proxy_type: Union[int, str]  # int -> str in v4.6.0
     proxy_ip: str
@@ -491,7 +507,7 @@ class Preferences(TypedDict, total=False):
     max_seeding_time: int
     max_inactive_seeding_time_enabled: bool  # 4.6.0
     max_inactive_seeding_time: int  # 4.6.0
-    max_ratio_act: int
+    max_ratio_act: Annotated[int, ShareLimitAction]
 
     add_trackers_enabled: bool
     add_trackers: str
@@ -534,6 +550,7 @@ class Preferences(TypedDict, total=False):
 
     # rss
     rss_refresh_interval: int
+    rss_fetch_delay: int  # API v2.10.3
     rss_max_articles_per_feed: int
     rss_processing_enabled: bool
     rss_auto_downloading_enabled: bool
@@ -542,6 +559,7 @@ class Preferences(TypedDict, total=False):
 
     # advanced
     resume_data_storage_type: str
+    torrent_content_remove_option: str  # API v2.11.2
     memory_working_set_limit: int
     current_network_interface: str
     current_interface_name: str  # v4.6.0
@@ -549,6 +567,7 @@ class Preferences(TypedDict, total=False):
     save_resume_data_interval: int
     torrent_file_size_limit: int
     recheck_completed_torrents: bool
+    app_instance_name: str  # API v2.10.4
     refresh_interval: int
     resolve_peer_countries: bool
     reannounce_when_address_changed: bool
@@ -590,6 +609,9 @@ class Preferences(TypedDict, total=False):
     enable_embedded_tracker: bool
     embedded_tracker_port: int
     embedded_tracker_port_forwarding: bool
+    mark_of_the_web: bool  # API v2.10.1
+    ignore_ssl_errors: bool  # API v2.11.2?
+    python_executable_path: str  # API v2.9.5
     upload_slots_behavior: int
     upload_choking_algorithm: int
     announce_to_all_trackers: bool
@@ -601,6 +623,7 @@ class Preferences(TypedDict, total=False):
     peer_turnover_cutoff: int
     peer_turnover_interval: int
     request_queue_size: int
+    dht_bootstrap_nodes: str  # API v2.9.4
 
     # removed keys
     force_proxy: bool
@@ -668,6 +691,7 @@ class TorrentInfo:
     save_path: str
     download_path: str  # API v2.8.4
     content_path: str  # API v2.6.1
+    root_path: str  # API v2.11.2
     added_on: datetime = field(
         convert=DateTimeConverter(),  # unix timestamp
     )
@@ -693,6 +717,7 @@ class TorrentInfo:
     )
     ratio: float
     ratio_limit: Union[float, RatioLimits]
+    popularity: float  # API v2.11.1
     seeding_time_limit: Union[timedelta, int, SeedingTimeLimits] = field(
         convert=DurationConverter(TimeUnit.MINUTES, _table_from_enum(SeedingTimeLimits)),
     )
@@ -713,7 +738,13 @@ class TorrentInfo:
         convert=DateTimeConverter(),
     )
     availability: float
-
+    reannounce: timedelta = field(
+        # API v2.9.3
+        convert=DurationConverter(TimeUnit.SECONDS),
+    )
+    comment: str  # API v2.10.2
+    private: bool  # API v2.11.1
+    has_metadata: bool  # API v2.11.2
     total_size: int
 
     def __repr__(self) -> str:
@@ -763,6 +794,7 @@ class TorrentProperties:
     peers: int
     peers_total: int
     share_ratio: float
+    popularity: float  # API v2.11.1
     reannounce: timedelta = field(
         convert=DurationConverter(TimeUnit.SECONDS),
     )
@@ -772,6 +804,7 @@ class TorrentProperties:
     pieces_have: int
     created_by: str
     is_private: bool  # v2.8.20
+    private: bool  # API v2.11.1
     addition_date: datetime = field(
         convert=DateTimeConverter(),
     )
@@ -789,6 +822,7 @@ class TorrentProperties:
     save_path: str
     download_path: str  # v2.8.4
     comment: str
+    has_metadata: bool  # API v2.11.2
 
     def __repr__(self) -> str:
         cls_name = type(self).__name__
@@ -943,6 +977,7 @@ class SyncTorrentInfo(TypedDict, total=False):
     save_path: str
     download_path: str
     content_path: str
+    root_path: str  # API v2.11.2
     added_on: int
     completion_on: int
     tracker: str
@@ -960,6 +995,7 @@ class SyncTorrentInfo(TypedDict, total=False):
     max_inactive_seeding_time: int
     ratio: float
     ratio_limit: float
+    popularity: float  # API v2.11.1
     seeding_time_limit: int
     inactive_seeding_time_limit: int
     seen_complete: int
@@ -968,7 +1004,10 @@ class SyncTorrentInfo(TypedDict, total=False):
     seeding_time: int
     last_activity: int
     availability: float
-
+    reannounce: int  # API v2.9.3
+    comment: str  # API v2.10.2
+    private: bool  # API v2.11.1
+    has_metadata: bool  # API v2.11.2
     total_size: int
 
 
@@ -1293,7 +1332,10 @@ class SearchResultEntry:
     fileSize: str
     nbSeeders: int
     nbLeechers: int
+    engineName: str  # API v2.11.1
     siteUrl: str
+    descrLink: str
+    pubDate: int  # API v2.11.1
 
 
 @declarative
