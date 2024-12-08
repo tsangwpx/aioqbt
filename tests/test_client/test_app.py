@@ -75,7 +75,7 @@ async def test_interfaces(client: APIClient):
 @pytest.mark.asyncio
 async def test_send_test_email(client: APIClient) -> None:
     if APIVersion.compare(client.api_version, (2, 11, 0)) < 0:
-        pytest.skip(f"Require API v2.11.0")
+        pytest.skip("Require API v2.11.0")
 
     # the endpoint always succeeds despite email settings.
     await client.app.send_test_email()

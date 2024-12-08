@@ -88,7 +88,7 @@ else:
 
 
 if sys.version_info >= (3, 8):
-    from functools import cached_property
+    from functools import cached_property as cached_property
 
     assert True, cached_property
 else:  # pragma: no cover
@@ -117,16 +117,14 @@ else:  # pragma: no cover
             self,
             instance: None,
             owner: Optional[Type[T]] = ...,
-        ) -> "cached_property[T, R]":
-            ...
+        ) -> "cached_property[T, R]": ...
 
         @overload
         def __get__(
             self,
             instance: T,
             owner: Optional[Type[T]] = ...,
-        ) -> R:
-            ...
+        ) -> R: ...
 
         def __get__(
             self,

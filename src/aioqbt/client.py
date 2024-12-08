@@ -1,5 +1,6 @@
 """
 """
+
 import asyncio
 import logging
 import types
@@ -663,13 +664,11 @@ def since(version: Union[APIVersion, Tuple[int, int, int]]) -> Callable[[T], T]:
 
 
 @overload
-def virtual(fn: None) -> Callable[[T], T]:
-    ...
+def virtual(fn: None) -> Callable[[T], T]: ...
 
 
 @overload
-def virtual(fn: T) -> T:
-    ...
+def virtual(fn: T) -> T: ...
 
 
 def virtual(fn: Any = None) -> Any:

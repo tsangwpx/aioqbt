@@ -1,6 +1,7 @@
 """
 Types utilized and returned by API methods.
 """
+
 from datetime import datetime, timedelta
 from typing import Any, Dict, Iterator, List, Mapping, Optional, Type, TypeVar, Union, overload
 
@@ -128,13 +129,16 @@ class TorrentState(StrEnum):
     is_paused = is_stopped
 
 
-_CHECKING_STATES = frozenset(    (
+_CHECKING_STATES = frozenset(
+    (
         TorrentState.CHECKING_DL,
         TorrentState.CHECKING_UP,
         TorrentState.CHECKING_RESUME_DATA,
-))
+    )
+)
 
-_DOWNLOADING_STATES = frozenset(    {
+_DOWNLOADING_STATES = frozenset(
+    {
         TorrentState.DOWNLOADING,
         TorrentState.META_DL,
         TorrentState.STOPPED_DL,
@@ -327,13 +331,11 @@ _SE = TypeVar("_SE", bound=StrEnum)
 
 
 @overload
-def _table_from_enum(cls: Type[_IE]) -> Dict[int, _IE]:
-    ...
+def _table_from_enum(cls: Type[_IE]) -> Dict[int, _IE]: ...
 
 
 @overload
-def _table_from_enum(cls: Type[_SE]) -> Dict[str, _SE]:
-    ...
+def _table_from_enum(cls: Type[_SE]) -> Dict[str, _SE]: ...
 
 
 def _table_from_enum(cls: Union[Type[IntEnum], Type[StrEnum]]) -> Dict[Any, Any]:
@@ -908,6 +910,7 @@ class TorrentSSLParameters:
     """
     See :meth:`.TorrentsAPI.ssl_parameters`.
     """
+
     ssl_certificate: str
     ssl_private_key: str
     ssl_dh_params: str

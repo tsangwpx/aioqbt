@@ -292,8 +292,7 @@ def field(
     hash: Optional[bool] = ...,
     convert: Optional[ConvertFn] = ...,
     metadata: Optional[Mapping[Any, Any]] = ...,
-) -> T:
-    ...
+) -> T: ...
 
 
 @overload
@@ -306,8 +305,7 @@ def field(
     hash: Optional[bool] = ...,
     convert: Optional[ConvertFn] = ...,
     metadata: Optional[Mapping[Any, Any]] = ...,
-) -> T:
-    ...
+) -> T: ...
 
 
 @overload
@@ -319,8 +317,7 @@ def field(
     hash: Optional[bool] = ...,
     convert: Optional[ConvertFn] = ...,
     metadata: Optional[Mapping[Any, Any]] = ...,
-) -> Any:
-    ...
+) -> Any: ...
 
 
 def field(
@@ -379,8 +376,7 @@ def field(
 
 
 @overload
-def declarative(cls: Type[T]) -> Type[T]:
-    ...
+def declarative(cls: Type[T]) -> Type[T]: ...
 
 
 @overload
@@ -391,8 +387,7 @@ def declarative(
     eq: bool = True,
     unsafe_hash: bool = False,
     frozen: bool = False,
-) -> Callable[[Type[T]], Type[T]]:
-    ...
+) -> Callable[[Type[T]], Type[T]]: ...
 
 
 # PEP 681 - Data Class Transforms

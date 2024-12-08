@@ -2,6 +2,7 @@
 Exceptions raised in :mod:`aioqbt`.
 
 """
+
 import logging
 import sys
 from typing import Optional
