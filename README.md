@@ -7,7 +7,7 @@ Python library for qBittorrent WebAPI with asyncio.
 Features:
 * Async typed interfaces.
 * Complete qBittorrent WebAPI.
-* Tested with qBittorrent v4.1.5 to v4.6.0 on Debian/Ubuntu.
+* Tested with qBittorrent v4.1.5 to v5.0.2 on Debian/Ubuntu.
 
 ## Documentation
 

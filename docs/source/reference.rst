@@ -146,6 +146,10 @@ Constants
     :members:
     :undoc-members:
 
+.. autoclass:: ShareLimitAction()
+    :members:
+    :undoc-members:
+
 .. autoclass:: StopCondition()
     :members:
     :undoc-members:
