@@ -25,12 +25,11 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.7",
     "Typing :: Typed",
 ]
 dependencies = [
@@ -68,7 +67,7 @@ where = ["src"]
 
 [tool.black]
 line-length = 100
-target-version = ["py37", "py38", "py39", "py310", "py311"]
+target-version = ["py39", "py310", "py311", "py312", "py313"]
 
 [tool.isort]
 line_length = 100
@@ -76,7 +75,7 @@ profile = "black"
 classes = ["RSSAPI"]
 
 [tool.mypy]
-python_version = "3.7"
+python_version = "3.9"
 sqlite_cache = true
 # selected strict options, sorted by name
 check_untyped_defs = true
