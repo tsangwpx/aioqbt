@@ -12,6 +12,7 @@ from aioqbt.api.log import LogAPI as LogAPI
 from aioqbt.api.rss import RSSAPI as RSSAPI
 from aioqbt.api.search import SearchAPI as SearchAPI
 from aioqbt.api.sync import SyncAPI as SyncAPI
+from aioqbt.api.torrentcreator import TorrentCreatorAPI as TorrentCreatorAPI
 from aioqbt.api.torrents import AddFormBuilder as AddFormBuilder
 from aioqbt.api.torrents import TorrentsAPI as TorrentsAPI
 from aioqbt.api.transfer import TransferAPI as TransferAPI
@@ -55,6 +56,8 @@ from aioqbt.api.types import SyncPeer as SyncPeer
 from aioqbt.api.types import SyncServerState as SyncServerState
 from aioqbt.api.types import SyncTorrentInfo as SyncTorrentInfo
 from aioqbt.api.types import SyncTorrentPeers as SyncTorrentPeers
+from aioqbt.api.types import TorrentCreationAddResult as TorrentCreationAddResult
+from aioqbt.api.types import TorrentCreationTaskStatus as TorrentCreationTaskStatus
 from aioqbt.api.types import TorrentInfo as TorrentInfo
 from aioqbt.api.types import TorrentProperties as TorrentProperties
 from aioqbt.api.types import Tracker as Tracker

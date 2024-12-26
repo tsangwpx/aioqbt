@@ -95,6 +95,14 @@ Sync
     :undoc-members:
 
 
+Torrent Creator
+----------------
+
+.. autoclass:: TorrentCreatorAPI()
+    :members:
+    :undoc-members:
+
+
 Transfer
 ----------------
 
@@ -212,6 +220,14 @@ Data structures
     :undoc-members:
 
 .. autoclass:: LogPeer()
+    :members:
+    :undoc-members:
+
+.. autoclass:: TorrentCreationAddResult()
+    :members:
+    :undoc-members:
+
+.. autoclass:: TorrentCreationTaskStatus()
     :members:
     :undoc-members:
 

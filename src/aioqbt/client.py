@@ -42,6 +42,7 @@ if TYPE_CHECKING:
         RSSAPI,
         SearchAPI,
         SyncAPI,
+        TorrentCreatorAPI,
         TorrentsAPI,
         TransferAPI,
     )
@@ -151,7 +152,15 @@ class APIClient:
         # break cycle references to help GC.
         vars_dict = vars(self)
 
-        for name in ("app", "auth", "log", "sync", "torrents", "transfer"):
+        for name in (
+            "app",
+            "auth",
+            "log",
+            "sync",
+            "torrentcreator",
+            "torrents",
+            "transfer",
+        ):
             if name not in vars_dict:
                 continue
             group = getattr(self, name, None)
@@ -460,6 +469,15 @@ class APIClient:
         from aioqbt.api.sync import SyncAPI
 
         return SyncAPI(self)
+
+    @cached_property
+    def torrentcreator(self) -> "TorrentCreatorAPI":
+        """
+        Torrent Creator API methods
+        """
+        from aioqbt.api.torrentcreator import TorrentCreatorAPI
+
+        return TorrentCreatorAPI(self)
 
     @cached_property
     def torrents(self) -> "TorrentsAPI":

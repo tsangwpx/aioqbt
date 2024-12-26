@@ -37,6 +37,10 @@ and the corresponding attributes in :class:`~aioqbt.client.APIClient`.
       - :class:`~.TransferAPI`
       -
 
+    * - Torrent creator
+      - :class:`~.TorrentCreatorAPI`
+      - `PR #20366 <https://github.com/qbittorrent/qBittorrent/pull/20366>`_
+
     * - :APIWiki:`Torrent management <#torrent-management>`
       - :class:`~.TorrentsAPI`
       -

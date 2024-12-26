@@ -1376,3 +1376,38 @@ class SearchPlugin:
     """
     url: str
     version: str
+
+
+class TorrentCreationAddResult(TypedDict, total=False):
+    """
+    Returned by :meth:`.TorrentCreatorAPI.add_task`.
+
+    """
+
+    taskID: str
+
+
+class TorrentCreationTaskStatus(TypedDict, total=False):
+    """
+    Returned by :meth:`.TorrentCreatorAPI.status`.
+
+    """
+
+    taskID: str
+    sourcePath: str
+    pieceSize: int
+    private: bool
+    timeAdded: str
+    format: str
+    optimizeAlignment: bool
+    paddedFileSizeLimit: int
+    status: str
+    comment: str
+    torrentFilePath: str
+    source: str
+    trackers: List[str]
+    urlSeeds: List[str]
+    timeStarted: str
+    timeFinished: str
+    errorMessage: str
+    progress: int  # [0, 100]
