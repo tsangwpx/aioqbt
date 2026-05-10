@@ -170,6 +170,7 @@ async def test_bool_methods(
         ("ssl_certificate", AddFormBuilder.ssl_certificate),
         ("ssl_private_key", AddFormBuilder.ssl_private_key),
         ("ssl_dh_params", AddFormBuilder.ssl_dh_params),
+        ("shareLimitAction", AddFormBuilder.share_limit_action),
     ],
 )
 @pytest.mark.parametrize(
@@ -198,7 +199,6 @@ async def test_str_methods(
     [
         ("dlLimit", AddFormBuilder.dl_limit),
         ("upLimit", AddFormBuilder.up_limit),
-        ("shareLimitAction", AddFormBuilder.share_limit_action),
     ],
 )
 @pytest.mark.parametrize(

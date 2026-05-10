@@ -381,16 +381,46 @@ class TorrentsAPI(APIGroup):
             data=data,
         )
 
+    @overload
+    async def edit_tracker(self, hash: InfoHash, url: str, new_url: str) -> None: ...
+
+    @overload
+    async def edit_tracker(
+        self,
+        hash: InfoHash,
+        url: str,
+        new_url: Optional[str] = None,
+        tier: Optional[int] = None,
+    ) -> None: ...
+
+    @overload
+    async def edit_tracker(self, hash: InfoHash, *, orig_url: str, new_url: str) -> None: ...
+
     @since((2, 2, 0))
     async def edit_tracker(
         self,
         hash: InfoHash,
-        orig_url: str,
-        new_url: str,
+        url: Optional[str] = None,
+        new_url: Optional[str] = None,
+        tier: Optional[int] = None,
+        *,
+        orig_url: Optional[str] = None,
     ) -> None:
-        data = ParamDict.with_hash(hash)
-        data.required_str("origUrl", orig_url)
-        data.required_str("newUrl", new_url)
+        if url is None and orig_url is None:
+            raise TypeError("url must be provided")
+        elif url is None:
+            # orig_url was renamed to url in API v2.13.0
+            url = orig_url
+
+        if APIVersion.compare(self._client().api_version, (2, 13, 0)) < 0:
+            data = ParamDict.with_hash(hash)
+            data.required_str("origUrl", url)  # type: ignore
+            data.optional_str("newUrl", new_url)
+        else:
+            data = ParamDict.with_hash(hash)
+            data.required_str("url", url)  # type: ignore
+            data.optional_str("newUrl", new_url)
+            data.optional_int("tier", tier)
 
         await self._request_text(
             "POST",
@@ -512,7 +542,10 @@ class TorrentsAPI(APIGroup):
         hashes: InfoHashesOrAll,
         ratio_limit: Union[float, RatioLimits],
         seeding_time_limit: Union[timedelta, int, SeedingTimeLimits],
-        inactive_seeding_time_limit: Union[timedelta, int, SeedingTimeLimits, None] = None,
+        inactive_seeding_time_limit: Union[
+            timedelta, int, SeedingTimeLimits, None
+        ] = None,
+        share_limit_action: Union[str, ShareLimitAction, None] = None,
     ) -> None:
         """
         Set share limits for torrents.
@@ -524,6 +557,9 @@ class TorrentsAPI(APIGroup):
         :param inactive_seeding_time_limit: :class:`~datetime.timedelta`, or
                 :class:`.InactiveSeedingTimeLimits` constants.
                 Required since qBittorrent v4.6.0 (API 2.9.2).
+        :param share_limit_action: a str, or
+                :class:`.ShareLimitAction` constants.
+                Required since qBittorrent v5.2.0 (API 2.12.0).
         """
         # since API v2.0.1
         client = self._client()
@@ -537,6 +573,9 @@ class TorrentsAPI(APIGroup):
                 "inactiveSeedingTimeLimit", inactive_seeding_time_limit, TimeUnit.MINUTES
             )
 
+        if share_limit_action is not None:
+            data.required_str("shareLimitAction", str(share_limit_action))
+
         try:
             await client.request_text(
                 "POST",
@@ -549,6 +588,13 @@ class TorrentsAPI(APIGroup):
                 and APIVersion.compare(client.api_version, (2, 9, 2)) >= 0
             ):
                 note = "Argument 'inactive_seeding_time_limit' is required since qBittorrent 4.6.0"
+                exc._add_note(ex, note, logger=client._logger)
+
+            if (
+                share_limit_action is None
+                and APIVersion.compare(client.api_version, (2, 12, 0)) >= 0
+            ):
+                note = "Argument 'share_limit_action' is required since qBittorrent 5.2.0"
                 exc._add_note(ex, note, logger=client._logger)
 
             raise
@@ -1110,7 +1156,7 @@ class AddFormBuilder:
     _add_to_top_of_queue: Optional[bool] = None
     _stop_condition: Optional[str] = None
     _content_layout: Optional[str] = None
-    _share_limit_action: Optional[int] = None
+    _share_limit_action: Optional[str] = None
 
     _ssl_certificate: Optional[str] = None
     _ssl_private_key: Optional[str] = None
@@ -1361,11 +1407,13 @@ class AddFormBuilder:
         return self
 
     @copy_self
-    def share_limit_action(self, share_limit_action: Union[int, ShareLimitAction, None]) -> Self:
+    def share_limit_action(
+        self, share_limit_action: Union[str, ShareLimitAction, None]
+    ) -> Self:
         """Set ``shareLimitAction`` value"""
         # API v2.11.0
         if share_limit_action is not None:
-            share_limit_action = int(share_limit_action)
+            share_limit_action = str(share_limit_action)
 
         self._share_limit_action = share_limit_action
         return self

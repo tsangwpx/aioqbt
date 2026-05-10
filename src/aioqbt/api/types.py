@@ -288,12 +288,31 @@ class ContentLayout(StrEnum):
     NO_SUBFOLDER = "NoSubfolder"
 
 
-class ShareLimitAction(IntEnum):
-    DEFAULT = -1
-    STOP = 0
-    REMOVE = 1
-    ENABLE_SUPER_SEEDING = 2
-    REMOVE_WITH_CONTENT = 3
+class ShareLimitAction(StrEnum):
+    DEFAULT = "Default"
+    STOP = "Stop"
+    REMOVE = "Remove"
+    ENABLE_SUPER_SEEDING = "EnableSuperSeeding"
+    REMOVE_WITH_CONTENT = "RemoveWithContent"
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, ShareLimitAction):
+            return self.value is other.value
+        elif isinstance(other, str):
+            return self.value == other
+        elif isinstance(other, int):
+            return int(self.value) == other
+        return NotImplemented
+
+    def __int__(self) -> int:
+        value = self._value_
+        return {
+            "Default": -1,
+            "Stop": 0,
+            "Remove": 1,
+            "EnableSuperSeeding": 2,
+            "RemoveWithContent": 3,
+        }[value]
 
 
 class FilePriority(IntEnum):
@@ -509,7 +528,7 @@ class Preferences(TypedDict, total=False):
     max_seeding_time: int
     max_inactive_seeding_time_enabled: bool  # 4.6.0
     max_inactive_seeding_time: int  # 4.6.0
-    max_ratio_act: Annotated[int, ShareLimitAction]
+    max_ratio_act: int
 
     add_trackers_enabled: bool
     add_trackers: str
@@ -725,6 +744,9 @@ class TorrentInfo:
     )
     inactive_seeding_time_limit: Union[timedelta, int, InactiveSeedingTimeLimits] = field(
         convert=DurationConverter(TimeUnit.MINUTES, _table_from_enum(SeedingTimeLimits)),
+    )
+    share_limit_action: Union[str, ShareLimitAction] = field(
+        convert=EnumConverter(ShareLimitAction),
     )
     seen_complete: datetime = field(
         convert=DateTimeConverter(),

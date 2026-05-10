@@ -9,7 +9,7 @@ from helper.torrent import TorrentData, make_torrent_files, make_torrent_single
 from helper.webapi import temporary_torrents
 
 from aioqbt import exc
-from aioqbt.api import AddFormBuilder
+from aioqbt.api import AddFormBuilder, ShareLimitAction
 from aioqbt.api.types import (
     Category,
     ContentLayout,
@@ -583,12 +583,14 @@ async def test_limits(client: APIClient):
     ratio_limit = 2
     seeding_time_limit = datetime.timedelta(days=1)
     inactive_seeding_time_limit = datetime.timedelta(days=30)
+    share_limit_action = ShareLimitAction.DEFAULT
 
     sample = make_torrent_single("limits")
     info_hash = sample.hash
 
     async with temporary_torrents(client, sample) as [info]:
         has_inactive_seeding_time_limit = hasattr(info, "inactive_seeding_time_limit")
+        support_share_limit_action = APIVersion.compare(client.api_version, (2, 12, 0)) >= 0
 
         # set dl_limit, up_limit, share_limits
         await client.torrents.set_download_limit((info_hash,), dl_limit)
@@ -599,6 +601,7 @@ async def test_limits(client: APIClient):
             ratio_limit=ratio_limit,
             seeding_time_limit=seeding_time_limit,
             inactive_seeding_time_limit=inactive_seeding_time_limit,
+            share_limit_action=share_limit_action,
         )
 
         await one_moment()
@@ -612,6 +615,9 @@ async def test_limits(client: APIClient):
 
         if has_inactive_seeding_time_limit:
             assert info.inactive_seeding_time_limit == inactive_seeding_time_limit
+
+        if support_share_limit_action:
+            assert info.share_limit_action == share_limit_action
 
         # torrents.download_limit()
         download_limits = await client.torrents.download_limit((info_hash,))
