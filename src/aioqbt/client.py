@@ -176,6 +176,7 @@ class APIClient:
         max_attempts: int = 3,
         retry_delay: float = 5,
         ssl: Optional[SSLContext] = None,
+        raise_for_status: bool = True,
         **kwargs: object,
     ) -> aiohttp.ClientResponse:
         """
@@ -245,10 +246,10 @@ class APIClient:
                     **kwargs,
                 )
 
-                if resp.status == 200:
+                if 200 <= resp.status < 300:
                     return resp
 
-                # treat all status except 200 an error
+                # treat all status outside 2xx range an error
                 # Read the response before release the response
                 resp_body = await resp.read()
                 resp.release()
@@ -281,6 +282,9 @@ class APIClient:
                     attempt_count += 1
                     await asyncio.sleep(sleeping_time)
                     continue
+
+            if not raise_for_status and resp is not None:
+                return resp
 
             self._handle_error(last_exc, resp, resp_body)
 
