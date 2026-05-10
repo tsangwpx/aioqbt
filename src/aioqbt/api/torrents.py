@@ -350,15 +350,24 @@ class TorrentsAPI(APIGroup):
             "POST",
             "torrents/add",
             data=form,
+            raise_for_status=False,
         )
 
         async with resp:
-            body = await resp.read()
+            try:
+                # body should have been cached in the aiohttp response
+                body = await resp.read()
+            except aiohttp.ClientConnectionError:
+                body = b""
 
-            if body != b"Ok.":
-                ex = exc.AddTorrentError.from_response(resp)
-                ex.message = body.decode("utf-8")
-                raise ex
+        # before 5.2.0, the response is status of 200 and a content of either "Ok." or "Fails."
+
+        if not 200 <= resp.status < 300 or (resp.status == 200 and body == b"Fails."):
+            ex = exc.AddTorrentError.from_response(resp)
+            ex.message = body.decode("utf-8")
+            raise ex
+
+        # TODO Support the add result since v5.2.0
 
     async def add_trackers(self, hash: InfoHash, trackers: Iterable[str]) -> None:
         _check_iterable_except_str("trackers", trackers)

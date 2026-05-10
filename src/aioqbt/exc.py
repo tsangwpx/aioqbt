@@ -82,14 +82,6 @@ class LoginError(APIError):
     """
 
 
-class AddTorrentError(APIError):
-    """
-    No **new** torrents were added.
-
-    This is raised by :meth:`.TorrentsAPI.add` and HTTP status is 200.
-    """
-
-
 class BadRequestError(APIError):
     """
     Bad request.
@@ -126,6 +118,14 @@ class ConflictError(APIError):
     Conflict.
 
     HTTP status is usually 409.
+    """
+
+
+class AddTorrentError(ConflictError):
+    """
+    No **new** torrents were added.
+
+    This is raised by :meth:`.TorrentsAPI.add` and HTTP status is 409, or 200 before qBittorrent v5.2.0.
     """
 
 
