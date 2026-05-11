@@ -1,14 +1,17 @@
+import asyncio
 from datetime import timedelta
 from io import BytesIO
 from typing import Any, Callable, Dict, List, Optional, Tuple
 from urllib.parse import parse_qsl
 
+import aiohttp
+import aiohttp.base_protocol
 import pytest
 from aiohttp import BodyPartReader, FormData, MultipartReader, hdrs
-from helper.torrent import make_torrent_single
 
 from aioqbt._compat import IntEnum, StrEnum
 from aioqbt.api import AddFormBuilder
+from helper.torrent import make_torrent_single
 
 
 class EnumInt(IntEnum):
@@ -28,30 +31,6 @@ class StreamWriter:
 
     async def write(self, buf: bytes) -> None:
         self._buf.extend(buf)
-
-
-class StreamReader:
-    def __init__(self, buf: bytes) -> None:
-        self._buf = buf
-        self._bio = BytesIO(buf)
-
-    async def read(self, n: int = -1) -> bytes:
-        return self._bio.read(n)
-
-    async def readline(self, n: int = -1) -> bytes:
-        return self._bio.readline(n)
-
-    def unread_data(self, data: bytes) -> None:
-        pos = self._bio.tell()
-        start = pos - len(data)
-        if start < 0:
-            raise IOError("unread more than position")
-        if self._buf[start:pos] != data:
-            raise IOError("Data unmatched")
-        self._bio.seek(start)
-
-    def at_eof(self) -> bool:
-        return self._bio.tell() == len(self._buf)
 
 
 @pytest.fixture(
@@ -75,6 +54,10 @@ def builder(request: pytest.FixtureRequest) -> AddFormBuilder:
         assert False, "unreachable"
 
 
+class _DummyProtocol(aiohttp.base_protocol.BaseProtocol):
+    pass
+
+
 async def consume_form(form: FormData) -> Dict[str, Any]:
     """
     Consume FormData and return its contents as dict
@@ -90,7 +73,12 @@ async def consume_form(form: FormData) -> Dict[str, Any]:
         stream_headers = {
             str(hdrs.CONTENT_TYPE): multipart.content_type,
         }
-        stream: Any = StreamReader(buffer)
+
+        protocol = _DummyProtocol(asyncio.get_running_loop())
+        stream = aiohttp.StreamReader(protocol, 1024 * 1024 * 128)
+        stream.feed_data(buffer)
+        stream.feed_eof()
+
         reader = MultipartReader(stream_headers, stream)
 
         while True:
@@ -182,6 +170,7 @@ async def test_bool_methods(
         ("ssl_certificate", AddFormBuilder.ssl_certificate),
         ("ssl_private_key", AddFormBuilder.ssl_private_key),
         ("ssl_dh_params", AddFormBuilder.ssl_dh_params),
+        ("shareLimitAction", AddFormBuilder.share_limit_action),
     ],
 )
 @pytest.mark.parametrize(
@@ -210,7 +199,6 @@ async def test_str_methods(
     [
         ("dlLimit", AddFormBuilder.dl_limit),
         ("upLimit", AddFormBuilder.up_limit),
-        ("shareLimitAction", AddFormBuilder.share_limit_action),
     ],
 )
 @pytest.mark.parametrize(

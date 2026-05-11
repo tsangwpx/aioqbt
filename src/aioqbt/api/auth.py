@@ -1,3 +1,7 @@
+from typing import Optional
+
+import aiohttp
+
 from aioqbt import exc
 from aioqbt.client import APIClient, APIGroup
 
@@ -12,15 +16,34 @@ async def _auth_login(client: APIClient, username: str, password: str) -> None:
             "username": str(username),
             "password": str(password),
         },
+        raise_for_status=False,
     )
 
     async with resp:
-        res = await resp.read()
+        try:
+            # body should have been cached in the response
+            res = await resp.read()
+        except aiohttp.ClientConnectionError:
+            res = b""
 
-        if res != b"Ok.":
+    # the API version is unavailable before login.
+    # Before v5.2.0, the login endpoint return 200 with either "Ok." or "Fails.".
+    if resp.status == 200 and res in (b"Ok.", b"Fails."):
+        if res == b"Ok.":
+            return
+        else:
             ex = exc.LoginError.from_response(resp)
             ex.message = res.decode("utf-8")
             raise ex
+
+    if 200 <= resp.status < 300:
+        # the status should either 200 or 401
+        return
+    else:
+        ex = exc.LoginError.from_response(resp)
+        ex.message = res.decode("utf-8")
+
+        raise ex
 
 
 class AuthAPI(APIGroup):
