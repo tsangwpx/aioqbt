@@ -313,18 +313,19 @@ def _json_types(annotation: Any) -> Set[Type[Any]]:
 
     tp_origin = get_origin(annotation)
     tp_args = get_args(annotation)
-    if isinstance(tp_origin, type):
-        return _json_types(tp_origin)
+
+    if tp_origin == Union:
+        result = set()
+        for arg in tp_args:
+            result.update(_json_types(arg))
+        return result
     elif tp_origin == Literal:
         result = set()
         for arg in tp_args:
             result.update(_json_types(type(arg)))
         return result
-    elif tp_origin == Union:
-        result = set()
-        for arg in tp_args:
-            result.update(_json_types(arg))
-        return result
+    elif isinstance(tp_origin, type):
+        return _json_types(tp_origin)
 
     raise ValueError(annotation)
 
